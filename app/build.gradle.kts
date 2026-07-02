@@ -92,7 +92,8 @@ android {
 
     packaging {
         resources {
-            excludes += listOf("/META-INF/LICENSE.md", "/META-INF/LICENSE-notice.md")
+            excludes.add("/META-INF/LICENSE.md")
+            excludes.add("/META-INF/LICENSE-notice.md")
         }
     }
 }
