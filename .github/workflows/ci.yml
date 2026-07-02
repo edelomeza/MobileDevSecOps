@@ -105,6 +105,7 @@ jobs:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: ./gradlew dependencyCheckAnalyze --no-daemon
       - name: Upload dependency check report
+        if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
