@@ -104,12 +104,24 @@ jobs:
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: ./gradlew dependencyCheckAnalyze --no-daemon
+      - name: Debug - list reports directory
+        if: success() || failure()
+        run: |
+          echo "=== app/build/ ==="
+          ls -la app/build/ 2>/dev/null || echo "app/build/ not found"
+          echo "=== app/build/reports/ ==="
+          ls -laR app/build/reports/ 2>/dev/null || echo "app/build/reports/ not found"
+          echo "=== Searching for dependency-check files ==="
+          find app/build/ -name "*dependency-check*" -type f 2>/dev/null || echo "No dependency-check files found in app/build/"
+          find . -name "*dependency-check-report*" -type f 2>/dev/null || echo "No dependency-check files found in workspace"
       - name: Upload dependency check report
         if: success() || failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: dependency-check-report
-          path: app/build/reports/
+          path: |
+            app/build/reports/dependency-check-report.*
+            **/dependency-check-report.*
 
   build:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
