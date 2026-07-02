@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm") version "2.2.10"
-    kotlin("plugin.serialization") version "2.2.10"
-    id("io.ktor.plugin") version "3.2.0"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ktor.plugin)
 }
 
 application {
@@ -15,14 +15,14 @@ ktor {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-server-core:3.2.0")
-    implementation("io.ktor:ktor-server-netty:3.2.0")
-    implementation("io.ktor:ktor-server-content-negotiation:3.2.0")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:3.2.0")
-    implementation("io.ktor:ktor-server-cors:3.2.0")
-    implementation("io.ktor:ktor-server-status-pages:3.2.0")
-    implementation("ch.qos.logback:logback-classic:1.5.16")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.server.serialization.json)
+    implementation(libs.ktor.server.cors)
+    implementation(libs.ktor.server.status.pages)
+    implementation(libs.logback.classic)
+    implementation(libs.kotlinx.serialization.json)
 }
 
 kotlin {

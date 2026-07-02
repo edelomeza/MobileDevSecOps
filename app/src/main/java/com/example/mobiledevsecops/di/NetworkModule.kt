@@ -19,6 +19,11 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
+private const val CONNECT_TIMEOUT_MS = 15_000L
+private const val REQUEST_TIMEOUT_MS = 30_000L
+private const val SOCKET_TIMEOUT_MS = 15_000L
+private const val MAX_RETRIES = 3
+
 val networkModule = module {
     single<HttpClient> {
         val tokenManager = get<TokenManager>()
@@ -32,13 +37,13 @@ val networkModule = module {
             }
 
             install(HttpTimeout) {
-                connectTimeoutMillis = 15_000
-                requestTimeoutMillis = 30_000
-                socketTimeoutMillis = 15_000
+                connectTimeoutMillis = CONNECT_TIMEOUT_MS
+                requestTimeoutMillis = REQUEST_TIMEOUT_MS
+                socketTimeoutMillis = SOCKET_TIMEOUT_MS
             }
 
             install(io.ktor.client.plugins.HttpRequestRetry) {
-                maxRetries = 3
+                maxRetries = MAX_RETRIES
                 retryOnServerErrors()
                 retryOnException()
             }

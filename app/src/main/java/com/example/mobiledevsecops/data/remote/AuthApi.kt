@@ -19,18 +19,24 @@ class AuthApi(
             contentType(ContentType.Application.Json)
             setBody(LoginRequest(username, password))
         }
-        if (response.status.value !in 200..299) {
+        if (response.status.value !in HTTP_OK..HTTP_PARTIAL_CONTENT) {
             val errorBody = try {
                 response.body<LoginResponse>()
             } catch (e: Exception) {
                 null
             }
-            if (response.status.value == 401 && errorBody?.message.isNullOrBlank()) {
+            if (response.status.value == HTTP_UNAUTHORIZED && errorBody?.message.isNullOrBlank()) {
                 throw SessionExpiredException()
             }
             return errorBody ?: LoginResponse(token = null, message = null)
         }
         return response.body()
+    }
+
+    companion object {
+        private const val HTTP_OK = 200
+        private const val HTTP_PARTIAL_CONTENT = 299
+        private const val HTTP_UNAUTHORIZED = 401
     }
 
     suspend fun logout(): LogoutResponse {

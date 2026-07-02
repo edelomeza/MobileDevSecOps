@@ -16,7 +16,7 @@ jobs:
   analyze:
     name: Analyze Kotlin
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       security-events: write
     steps:
@@ -25,6 +25,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      - name: Install Android SDK API 36
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:

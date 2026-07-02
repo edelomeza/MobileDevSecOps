@@ -60,7 +60,7 @@ android {
         }
     }
 
-    val baseUrl: String = project.property("api.base.url") as String
+    val baseUrl: String = project.findProperty("api.base.url") as? String ?: "https://10.0.2.2:7227"
 
     buildTypes {
         debug {
@@ -92,8 +92,7 @@ android {
 
     packaging {
         resources {
-            excludes += "/META-INF/LICENSE.md"
-            excludes += "/META-INF/LICENSE-notice.md"
+            excludes += listOf("/META-INF/LICENSE.md", "/META-INF/LICENSE-notice.md")
         }
     }
 }
@@ -169,6 +168,12 @@ dependencies {
 detekt {
     config.setFrom("../detekt.yml")
     buildUponDefaultConfig = true
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
 }
 
 dependencyCheck {

@@ -24,7 +24,7 @@ class UsuarioApi(
             parameter("PageNumber", page)
             parameter("PageSize", pageSize)
         }
-        if (response.status.value == 401) throw SessionExpiredException()
+        if (response.status.value == HTTP_UNAUTHORIZED) throw SessionExpiredException()
         return response.body()
     }
 
@@ -34,8 +34,8 @@ class UsuarioApi(
             setBody(request)
         }
         when (response.status.value) {
-            401 -> throw SessionExpiredException()
-            409 -> throw ConflictException()
+            HTTP_UNAUTHORIZED -> throw SessionExpiredException()
+            HTTP_CONFLICT -> throw ConflictException()
         }
     }
 
@@ -45,8 +45,8 @@ class UsuarioApi(
             setBody(request)
         }
         when (response.status.value) {
-            401 -> throw SessionExpiredException()
-            409 -> throw ConflictException()
+            HTTP_UNAUTHORIZED -> throw SessionExpiredException()
+            HTTP_CONFLICT -> throw ConflictException()
         }
     }
 
@@ -56,12 +56,14 @@ class UsuarioApi(
             setBody(request)
         }
         when (response.status.value) {
-            401 -> throw SessionExpiredException()
-            409 -> throw ConflictException()
+            HTTP_UNAUTHORIZED -> throw SessionExpiredException()
+            HTTP_CONFLICT -> throw ConflictException()
         }
     }
 
     companion object {
         const val PAGE_SIZE = 8
+        private const val HTTP_UNAUTHORIZED = 401
+        private const val HTTP_CONFLICT = 409
     }
 }

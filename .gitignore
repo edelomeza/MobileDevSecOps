@@ -40,6 +40,9 @@ keys.properties
 .env
 .env.*
 
+# --- Kotlin daemon ---
+/.kotlin/
+
 # --- Build artifacts ---
 /captures
 .externalNativeBuild

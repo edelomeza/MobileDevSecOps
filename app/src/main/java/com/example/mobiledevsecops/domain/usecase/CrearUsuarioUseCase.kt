@@ -4,6 +4,11 @@ import com.example.mobiledevsecops.data.remote.ConflictException
 import com.example.mobiledevsecops.data.remote.SessionExpiredException
 import com.example.mobiledevsecops.domain.repository.UsuarioRepository
 
+private const val MAX_NOMBRE_LENGTH = 50
+private const val PWD_MIN_LENGTH = 8
+private const val PWD_MAX_LENGTH = 128
+private const val MAX_CORREO_LENGTH = 50
+
 sealed class CrearUsuarioResult {
     data object Success : CrearUsuarioResult()
     data class ValidationError(val errores: Map<String, String>) : CrearUsuarioResult()
@@ -45,8 +50,8 @@ class CrearUsuarioUseCase(
 
         if (strNombre.isBlank()) {
             errores["strNombre"] = "El nombre es obligatorio"
-        } else if (strNombre.length > 50) {
-            errores["strNombre"] = "Máximo 50 caracteres"
+        } else if (strNombre.length > MAX_NOMBRE_LENGTH) {
+            errores["strNombre"] = "Máximo $MAX_NOMBRE_LENGTH caracteres"
         } else if (!Regex("^[\\p{L}0-9_ ]+$").matches(strNombre)) {
             errores["strNombre"] = "Solo letras (incluye acentos/ñ), números y espacios"
         }
@@ -55,12 +60,12 @@ class CrearUsuarioUseCase(
             errores["strPWD"] = "La contraseña es obligatoria"
         } else {
             val pwdErrors = mutableListOf<String>()
-            if (strPWD.length < 8) pwdErrors.add("mínimo 8 caracteres")
+            if (strPWD.length < PWD_MIN_LENGTH) pwdErrors.add("mínimo $PWD_MIN_LENGTH caracteres")
             if (!Regex(".*[A-Z].*").matches(strPWD)) pwdErrors.add("1 mayúscula")
             if (!Regex(".*[0-9].*").matches(strPWD)) pwdErrors.add("1 dígito")
             if (!Regex(".*[!@#\$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*").matches(strPWD)) pwdErrors.add("1 caracter especial")
             if (strPWD.contains(" ")) pwdErrors.add("sin espacios")
-            if (strPWD.length > 128) pwdErrors.add("máximo 128 caracteres")
+            if (strPWD.length > PWD_MAX_LENGTH) pwdErrors.add("máximo $PWD_MAX_LENGTH caracteres")
             if (pwdErrors.isNotEmpty()) {
                 errores["strPWD"] = "Debe tener: ${pwdErrors.joinToString(", ")}"
             }
@@ -68,8 +73,8 @@ class CrearUsuarioUseCase(
 
         if (strCorreoElectronico.isBlank()) {
             errores["strCorreoElectronico"] = "El correo es obligatorio"
-        } else if (strCorreoElectronico.length > 50) {
-            errores["strCorreoElectronico"] = "Máximo 50 caracteres"
+        } else if (strCorreoElectronico.length > MAX_CORREO_LENGTH) {
+            errores["strCorreoElectronico"] = "Máximo $MAX_CORREO_LENGTH caracteres"
         } else if (!Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$").matches(strCorreoElectronico)) {
             errores["strCorreoElectronico"] = "Formato de correo inválido"
         }

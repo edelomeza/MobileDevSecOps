@@ -158,147 +158,189 @@ fun UsuarioScreen(
                 .padding(horizontal = 16.dp)
         ) {
             when {
-                uiState.isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Cargando usuarios...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                uiState.isLoading -> LoadingContent()
+                uiState.error != null && uiState.usuarios.isEmpty() -> ErrorContent(
+                    message = uiState.error ?: "",
+                    onRetry = { viewModel.loadPage(1) }
+                )
+                uiState.usuarios.isEmpty() -> EmptyContent()
+                else -> UsuarioListContent(
+                    uiState = uiState,
+                    onNavigateToEdit = onNavigateToEdit,
+                    onNavigateToDelete = onNavigateToDelete,
+                    onPreviousPage = viewModel::goToPreviousPage,
+                    onNextPage = viewModel::goToNextPage
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoadingContent() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Cargando usuarios...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorContent(
+    message: String,
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Error",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(onClick = onRetry) {
+                Text("Reintentar")
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyContent() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "No se encontraron usuarios",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun UsuarioListContent(
+    uiState: UsuarioUiState,
+    onNavigateToEdit: (id: Int, nombre: String, correo: String, rowVersion: String) -> Unit,
+    onNavigateToDelete: (id: Int, nombre: String, correo: String, rowVersion: String) -> Unit,
+    onPreviousPage: () -> Unit,
+    onNextPage: () -> Unit
+) {
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Text(
+        text = "Total: ${uiState.totalCount} usuarios",
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(bottom = 12.dp)
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column {
+            TableHeader()
+            LazyColumn {
+                itemsIndexed(uiState.usuarios) { index, usuario ->
+                    UsuarioRow(
+                        usuario = usuario,
+                        isEven = index % 2 == 0,
+                        onEditClick = {
+                            onNavigateToEdit(
+                                usuario.id,
+                                usuario.strNombre,
+                                usuario.strCorreoElectronico,
+                                usuario.rowVersion
+                            )
+                        },
+                        onDeleteClick = {
+                            onNavigateToDelete(
+                                usuario.id,
+                                usuario.strNombre,
+                                usuario.strCorreoElectronico,
+                                usuario.rowVersion
                             )
                         }
-                    }
-                }
-
-                uiState.error != null && uiState.usuarios.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "Error",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = uiState.error ?: "",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Button(onClick = { viewModel.loadPage(1) }) {
-                                Text("Reintentar")
-                            }
-                        }
-                    }
-                }
-
-                uiState.usuarios.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No se encontraron usuarios",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                else -> {
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Total: ${uiState.totalCount} usuarios",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 12.dp)
                     )
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column {
-                            TableHeader()
-                            LazyColumn {
-                                itemsIndexed(uiState.usuarios) { index, usuario ->
-                                    UsuarioRow(
-                                        usuario = usuario,
-                                        isEven = index % 2 == 0,
-                                        onEditClick = {
-                                            onNavigateToEdit(
-                                                usuario.id,
-                                                usuario.strNombre,
-                                                usuario.strCorreoElectronico,
-                                                usuario.rowVersion
-                                            )
-                                        },
-                                        onDeleteClick = {
-                                            onNavigateToDelete(
-                                                usuario.id,
-                                                usuario.strNombre,
-                                                usuario.strCorreoElectronico,
-                                                usuario.rowVersion
-                                            )
-                                        }
-                                    )
-                                    if (index < uiState.usuarios.lastIndex) {
-                                        HorizontalDivider(
-                                            color = MaterialTheme.colorScheme.outlineVariant,
-                                            thickness = 0.5.dp
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Button(
-                            onClick = { viewModel.goToPreviousPage() },
-                            enabled = uiState.currentPage > 1
-                        ) {
-                            Text("Anterior")
-                        }
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Text(
-                            text = "Página ${uiState.currentPage} de ${uiState.totalPages}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
+                    if (index < uiState.usuarios.lastIndex) {
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                            thickness = 0.5.dp
                         )
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Button(
-                            onClick = { viewModel.goToNextPage() },
-                            enabled = uiState.currentPage < uiState.totalPages
-                        ) {
-                            Text("Siguiente")
-                        }
                     }
                 }
             }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    PaginationControls(
+        currentPage = uiState.currentPage,
+        totalPages = uiState.totalPages,
+        onPrevious = onPreviousPage,
+        onNext = onNextPage
+    )
+}
+
+@Composable
+private fun PaginationControls(
+    currentPage: Int,
+    totalPages: Int,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Button(
+            onClick = onPrevious,
+            enabled = currentPage > 1
+        ) {
+            Text("Anterior")
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Text(
+            text = "Página $currentPage de $totalPages",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Button(
+            onClick = onNext,
+            enabled = currentPage < totalPages
+        ) {
+            Text("Siguiente")
         }
     }
 }

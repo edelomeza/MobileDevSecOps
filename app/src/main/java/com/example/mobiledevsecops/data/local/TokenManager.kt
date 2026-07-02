@@ -71,14 +71,14 @@ class TokenManager(context: Context) {
     fun isLoggedIn(): Boolean {
         val token = getToken() ?: return false
         val exp = decodeJwtExpiry(token)
-        val currentTime = System.currentTimeMillis() / 1000
+        val currentTime = System.currentTimeMillis() / MILLIS_TO_SECONDS
         if (BuildConfig.DEBUG) Logger.d("isLoggedIn: exp=$exp, currentTime=$currentTime")
         if (exp == null) {
             if (BuildConfig.DEBUG) Logger.w("Token sin exp, rechazando")
             clearAll()
             return false
         }
-        val bufferSec = 300L
+        val bufferSec = EXPIRY_BUFFER_SECONDS
         if (exp < currentTime - bufferSec) {
             if (BuildConfig.DEBUG) Logger.w("Token expirado (exp=$exp, currentTime=$currentTime, buffer=${bufferSec}s), limpiando sesión")
             clearAll()
@@ -90,8 +90,8 @@ class TokenManager(context: Context) {
     private fun isJwtValid(token: String): Boolean {
         return try {
             val parts = token.split(".")
-            if (parts.size != 3) {
-                if (BuildConfig.DEBUG) Logger.d("isJwtValid: token no tiene 3 partes")
+            if (parts.size != JWT_PART_COUNT) {
+                if (BuildConfig.DEBUG) Logger.d("isJwtValid: token no tiene ${JWT_PART_COUNT} partes")
                 return false
             }
 
@@ -116,7 +116,7 @@ class TokenManager(context: Context) {
     private fun decodeJwtExpiry(token: String): Long? {
         return try {
             val parts = token.split(".")
-            if (parts.size != 3) return null
+            if (parts.size != JWT_PART_COUNT) return null
             val payload = Base64.decode(parts[1], Base64.URL_SAFE)
             val json = Json.parseToJsonElement(payload.decodeToString()).jsonObject
             json["exp"]?.jsonPrimitive?.content?.toLongOrNull()
@@ -130,5 +130,8 @@ class TokenManager(context: Context) {
         private const val KEY_JWT = "jwt_token"
         private const val KEY_LOGIN_ATTEMPTS = "login_attempts"
         private const val KEY_LOCKOUT_UNTIL = "lockout_until"
+        private const val MILLIS_TO_SECONDS = 1000L
+        private const val EXPIRY_BUFFER_SECONDS = 300L
+        private const val JWT_PART_COUNT = 3
     }
 }

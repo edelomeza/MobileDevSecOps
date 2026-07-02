@@ -7,7 +7,7 @@ style:
     excludes: ['**/test/**', '**/androidTest/**']
   MagicNumber:
     active: true
-    excludes: ['**/ui/**', '**/theme/**']
+    excludes: ['**/ui/**', '**/theme/**', '**/test/**', '**/androidTest/**']
   ForbiddenComment:
     active: true
     comments: ['TODO', 'FIXME', 'STOPSHIP']
@@ -47,6 +47,9 @@ exceptions:
   TooGenericExceptionCaught:
     active: true
     excludes: ['**/useCase/**', '**/test/**', '**/androidTest/**', '**/ui/**', '**/data/**']
+  TooGenericExceptionThrown:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**']
   SwallowedException:
     active: true
     excludes: ['**/useCase/**', '**/test/**', '**/androidTest/**', '**/ui/**', '**/data/**']
