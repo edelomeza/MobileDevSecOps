@@ -1,0 +1,56 @@
+# --- Android ---
+*.apk
+*.aab
+*.ap_
+*.dex
+bin/
+gen/
+out/
+
+# --- Gradle ---
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+gradle/gradle-daemon-jvm.properties
+
+# --- IDE: IntelliJ / Android Studio ---
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
+
+# --- Secrets & Security ---
+local.properties
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+debug.keystore
+secrets.properties
+keys.properties
+.env
+.env.*
+
+# --- Build artifacts ---
+/captures
+.externalNativeBuild
+.cxx
+*.log
+*.tmp
+
+# --- Misc ---
+Task
+
+# --- Docker ---
+mock-api/build/
+mock-api/.gradle/
+

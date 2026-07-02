@@ -1,0 +1,8 @@
+.git/
+.gitignore
+.gradle/
+.idea/
+build/
+*.md
+.DS_Store
+local.properties

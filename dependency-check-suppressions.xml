@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+        IMPORTANTE: No suprimir paquetes enteros. Solo agregar CVEs específicos
+        que hayan sido verificados como falsos positivos con CVSS >= 7.0.
+
+        Para verificar: ./gradlew dependencyCheckAnalyze --no-daemon
+        Revisar el reporte en: app/build/reports/dependency-check-report.html
+    -->
+
+</suppressions>

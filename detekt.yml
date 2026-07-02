@@ -1,0 +1,76 @@
+build:
+  maxIssues: 50
+
+style:
+  WildcardImport:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**']
+  MagicNumber:
+    active: true
+    excludes: ['**/ui/**', '**/theme/**']
+  ForbiddenComment:
+    active: true
+    comments: ['TODO', 'FIXME', 'STOPSHIP']
+  MaxLineLength:
+    active: false
+  MayBeConst:
+    active: false
+  ReturnCount:
+    active: false
+  NewLineAtEndOfFile:
+    active: true
+  DestructuringDeclarationWithTooManyEntries:
+    active: true
+    maxDestructuringEntries: 5
+  UnusedPrivateProperty:
+    active: true
+
+complexity:
+  TooManyFunctions:
+    active: true
+  LongMethod:
+    active: true
+    threshold: 80
+    excludes: ['**/ui/**']
+  LongParameterList:
+    active: true
+    functionThreshold: 10
+    constructorThreshold: 10
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 25
+  NestedBlockDepth:
+    active: true
+    threshold: 5
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: true
+    excludes: ['**/useCase/**', '**/test/**', '**/androidTest/**', '**/ui/**', '**/data/**']
+  SwallowedException:
+    active: true
+    excludes: ['**/useCase/**', '**/test/**', '**/androidTest/**', '**/ui/**', '**/data/**']
+
+potential-bugs:
+  LateinitUsage:
+    active: false
+
+naming:
+  FunctionNaming:
+    active: true
+    excludes: ['**/ui/**', '**/test/**', '**/androidTest/**']
+  MatchingDeclarationName:
+    active: false
+  ConstructorParameterNaming:
+    active: true
+    excludes: ['**/dto/**', '**/test/**', '**/androidTest/**']
+
+comments:
+  CommentOverPrivateFunction:
+    active: false
+  CommentOverPrivateProperty:
+    active: false
+  UndocumentedPublicClass:
+    active: false
+  UndocumentedPublicFunction:
+    active: false

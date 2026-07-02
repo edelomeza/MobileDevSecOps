@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  mock-api:
+    build:
+      context: ./mock-api
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    container_name: mobiledevsecops-mock-api
+    environment:
+      - KTOR_ENV=development
+      - MOCK_USER=${MOCK_USER:-admin}
+      - MOCK_PASSWORD=${MOCK_PASSWORD:-Admin123!}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/Login/login"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  default:
+    name: mobiledevsecops-network

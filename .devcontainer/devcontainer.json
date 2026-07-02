@@ -1,0 +1,33 @@
+{
+    "name": "MobileDevSecOps",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "fwcd.kotlin",
+                "vscjava.vscode-gradle",
+                "naco-siren.gradle-language",
+                "EditorConfig.EditorConfig",
+                "ms-vscode-remote.remote-containers"
+            ],
+            "settings": {
+                "kotlin.languageServer.enabled": true,
+                "files.watcherExclude": {
+                    "**/.gradle/**": true,
+                    "**/build/**": true
+                },
+                "search.exclude": {
+                    "**/.gradle/**": true,
+                    "**/build/**": true
+                }
+            }
+        }
+    },
+    "postCreateCommand": "cd /workspaces/MobileDevSecOps && ./gradlew --version && echo 'Entorno listo para desarrollo'",
+    "mounts": [
+        "source=${env:HOME}${env:USERPROFILE}/.gradle,target=/home/vscode/.gradle,type=bind,consistency=cached"
+    ],
+    "remoteUser": "vscode"
+}
