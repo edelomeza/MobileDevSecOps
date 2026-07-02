@@ -11,7 +11,7 @@ plugins {
 android {
     val keysFile = rootProject.file("keys.properties")
     if (keysFile.exists()) {
-        keysFile.readLines().forEach { line ->
+        for (line in keysFile.readLines()) {
             val trimmed = line.trim()
             if (trimmed.isNotEmpty() && !trimmed.startsWith("#")) {
                 val eqIndex = trimmed.indexOf('=')
