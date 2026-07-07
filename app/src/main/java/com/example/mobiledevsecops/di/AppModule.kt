@@ -8,6 +8,7 @@ import com.example.mobiledevsecops.data.repository.UsuarioRepositoryImpl
 import com.example.mobiledevsecops.domain.repository.AuthRepository
 import com.example.mobiledevsecops.domain.repository.UsuarioRepository
 import com.example.mobiledevsecops.domain.usecase.ActualizarUsuarioUseCase
+import com.example.mobiledevsecops.domain.usecase.BuscarUsuariosUseCase
 import com.example.mobiledevsecops.domain.usecase.CrearUsuarioUseCase
 import com.example.mobiledevsecops.domain.usecase.EliminarUsuarioUseCase
 import com.example.mobiledevsecops.domain.usecase.LoginUseCase
@@ -34,9 +35,10 @@ val appModule = module {
     factory { CrearUsuarioUseCase(get()) }
     factory { ActualizarUsuarioUseCase(get()) }
     factory { EliminarUsuarioUseCase(get()) }
+    factory { BuscarUsuariosUseCase(get()) }
     viewModel { LoginViewModel(get(), get()) }
     viewModel { IndexViewModel(get()) }
-    viewModel { UsuarioViewModel(get()) }
+    viewModel { UsuarioViewModel(get(), get()) }
     viewModel { UsuarioCrearViewModel(get()) }
     viewModel { (id: Int, nombre: String, correo: String, rowVersion: String) ->
         UsuarioActualizarViewModel(get(), id, nombre, correo, rowVersion)

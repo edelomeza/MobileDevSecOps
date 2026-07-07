@@ -61,6 +61,16 @@ class UsuarioApi(
         }
     }
 
+    suspend fun buscarUsuarios(texto: String, page: Int, pageSize: Int = PAGE_SIZE): UsuarioListResponse {
+        val response = httpClient.get("${BuildConfig.BASE_URL}/api/v1/Usuario/buscar") {
+            parameter("texto", texto)
+            parameter("PageNumber", page)
+            parameter("PageSize", pageSize)
+        }
+        if (response.status.value == HTTP_UNAUTHORIZED) throw SessionExpiredException()
+        return response.body()
+    }
+
     companion object {
         const val PAGE_SIZE = 8
         private const val HTTP_UNAUTHORIZED = 401

@@ -60,7 +60,7 @@ android {
         }
     }
 
-    val baseUrl: String = project.findProperty("api.base.url") as? String ?: "https://10.0.2.2:7227"
+    val baseUrl: String = project.findProperty("api.base.url") as? String ?: "https://localhost:7227"
 
     buildTypes {
         debug {
