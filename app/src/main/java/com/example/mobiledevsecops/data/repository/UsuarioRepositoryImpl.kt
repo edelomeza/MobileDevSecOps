@@ -18,6 +18,11 @@ class UsuarioRepositoryImpl(
         return response.toDomain()
     }
 
+    override suspend fun buscarUsuarios(texto: String, page: Int, pageSize: Int): UsuarioPage {
+        val response: UsuarioListResponse = usuarioApi.buscarUsuarios(texto, page, pageSize)
+        return response.toDomain()
+    }
+
     override suspend fun crearUsuario(strNombre: String, strPWD: String, strCorreoElectronico: String) {
         val request = UserCreateRequest(
             strNombre = strNombre,
