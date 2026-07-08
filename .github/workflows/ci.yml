@@ -107,9 +107,6 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/share/boost
           sudo rm -rf /opt/hostedtoolcache/CodeQL
-      - name: Clean stale OWASP data
-        run: |
-          rm -rf ~/.dependency-check/data
       - name: Cache OWASP Dependency Check data
         uses: actions/cache@v5
         with:

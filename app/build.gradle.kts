@@ -180,9 +180,11 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 dependencyCheck {
     formats = listOf("HTML", "JSON")
     failBuildOnCVSS = 7.0f
-    suppressionFile = "../dependency-check-suppressions.xml"
+    suppressionFile = rootProject.file("dependency-check-suppressions.xml").toString()
     nvd {
         apiKey = System.getenv("NVD_API_KEY") ?: ""
+        delay = 6000
+        resultsPerPage = 2000
         maxRetryCount = 3
     }
 }
