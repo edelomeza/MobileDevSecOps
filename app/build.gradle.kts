@@ -185,7 +185,4 @@ dependencyCheck {
         apiKey = System.getenv("NVD_API_KEY") ?: ""
         maxRetryCount = 3
     }
-    data {
-        maxRetries = 3
-    }
 }
