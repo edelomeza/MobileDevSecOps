@@ -177,6 +177,10 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     }
 }
 
+tasks.withType<org.owasp.dependencycheck.gradle.tasks.Analyze> {
+    notCompatibleWithConfigurationCache("dependencyCheckAnalyze")
+}
+
 dependencyCheck {
     formats = listOf("HTML", "JSON")
     failBuildOnCVSS = 7.0f
