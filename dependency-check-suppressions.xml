@@ -4,8 +4,8 @@
         IMPORTANTE: No suprimir paquetes enteros. Solo agregar CVEs específicos
         que hayan sido verificados como falsos positivos con CVSS >= 7.0.
 
-        Para verificar: ./gradlew dependencyCheckAnalyze --no-daemon
-        Revisar el reporte en: app/build/reports/dependency-check-report.html
+        Para verificar: ./gradlew dependencyCheckAnalyze -no-daemon
+        Revisar el reporte en app/build/reports/dependency-check-report.html
     -->
 
 </suppressions>
