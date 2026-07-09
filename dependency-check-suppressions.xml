@@ -245,4 +245,12 @@
         <packageName regex="true">io\.ktor:.*</packageName>
         <cve>CVE-2025-29904</cve>
     </suppress>
+
+    <!-- CVE-2026-6785 / CVE-2026-6786 - URLs exceden límite VARCHAR(1000) en DB de OWASP DC -->
+    <suppress base="true">
+        <cve>CVE-2026-6785</cve>
+    </suppress>
+    <suppress base="true">
+        <cve>CVE-2026-6786</cve>
+    </suppress>
 </suppressions>
