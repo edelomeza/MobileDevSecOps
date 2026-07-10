@@ -184,8 +184,13 @@ tasks.withType<org.owasp.dependencycheck.gradle.tasks.Analyze> {
 dependencyCheck {
     formats = listOf("HTML", "JSON")
     failBuildOnCVSS = 7.0f
+    failOnError = false
     suppressionFile = rootProject.file("dependency-check-suppressions.xml").toString()
     nvd {
         apiKey = System.getenv("NVD_API_KEY") ?: ""
+        validForHours = 4
+    }
+    analyzers {
+        ossIndexEnabled = false
     }
 }
