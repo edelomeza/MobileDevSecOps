@@ -9,6 +9,10 @@
     <!-- Netty 4.1.93 / 4.1.110 - dependencia transitiva de gRPC/AGP, no expuesta directamente -->
     <suppress base="true">
         <gav regex="true">io\.netty:.*</gav>
+        <cve>CVE-2023-44487</cve>
+    </suppress>
+    <suppress base="true">
+        <gav regex="true">io\.netty:.*</gav>
         <cve>CVE-2026-45674</cve>
     </suppress>
     <suppress base="true">

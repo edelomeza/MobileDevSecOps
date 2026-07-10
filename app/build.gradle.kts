@@ -127,6 +127,15 @@ ktlint {
     ignoreFailures.set(false)
 }
 
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "io.netty") {
+            useVersion("4.1.110.Final")
+            because("CVE-2023-44487 - HTTP/2 Rapid Reset, forzar version parcheada")
+        }
+    }
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
