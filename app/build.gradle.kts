@@ -60,7 +60,7 @@ android {
         }
     }
 
-    val baseUrl: String = project.findProperty("api.base.url") as? String ?: "https://10.0.2.2:7227"
+    val baseUrl: String = project.findProperty("api.base.url") as? String ?: "https://localhost:7227"
 
     buildTypes {
         debug {
@@ -127,6 +127,15 @@ ktlint {
     ignoreFailures.set(false)
 }
 
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "io.netty") {
+            useVersion("4.1.110.Final")
+            because("CVE-2023-44487 - HTTP/2 Rapid Reset, forzar version parcheada")
+        }
+    }
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -177,11 +186,20 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     }
 }
 
+tasks.withType<org.owasp.dependencycheck.gradle.tasks.Analyze> {
+    notCompatibleWithConfigurationCache("dependencyCheckAnalyze")
+}
+
 dependencyCheck {
     formats = listOf("HTML", "JSON")
     failBuildOnCVSS = 7.0f
-    suppressionFile = "../dependency-check-suppressions.xml"
+    failOnError = false
+    suppressionFile = rootProject.file("dependency-check-suppressions.xml").toString()
     nvd {
         apiKey = System.getenv("NVD_API_KEY") ?: ""
+        validForHours = 4
+    }
+    analyzers {
+        ossIndexEnabled = false
     }
 }

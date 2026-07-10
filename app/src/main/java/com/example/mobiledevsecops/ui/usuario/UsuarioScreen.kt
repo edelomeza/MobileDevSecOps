@@ -17,9 +17,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +32,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
@@ -75,6 +80,13 @@ fun UsuarioScreen(
             when (event) {
                 is UsuarioEvent.NavigateBack -> onNavigateBack()
                 is UsuarioEvent.SessionExpired -> onSessionExpired()
+                is UsuarioEvent.ShowSnackbar -> {
+                    snackbarIsSuccess = false
+                    snackbarHostState.showSnackbar(
+                        message = event.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
             }
         }
     }
@@ -157,6 +169,15 @@ fun UsuarioScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
+            SearchBar(
+                searchText = uiState.searchText,
+                isSearching = uiState.isSearching,
+                isSearchActive = uiState.isSearchActive,
+                onSearchTextChanged = viewModel::onSearchTextChanged,
+                onBuscarClicked = viewModel::onBuscarClicked,
+                onClearSearch = viewModel::onClearSearch
+            )
+
             when {
                 uiState.isLoading -> LoadingContent()
                 uiState.error != null && uiState.usuarios.isEmpty() -> ErrorContent(
@@ -190,6 +211,108 @@ private fun LoadingContent() {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun SearchBar(
+    searchText: String,
+    isSearching: Boolean,
+    isSearchActive: Boolean,
+    onSearchTextChanged: (String) -> Unit,
+    onBuscarClicked: () -> Unit,
+    onClearSearch: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = onSearchTextChanged,
+                modifier = Modifier.weight(1f),
+                placeholder = { Text("Buscar por nombre") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Buscar"
+                    )
+                },
+                trailingIcon = {
+                    if (searchText.isNotEmpty()) {
+                        IconButton(onClick = { onSearchTextChanged("") }) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Limpiar texto"
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(
+                onClick = onBuscarClicked,
+                enabled = searchText.isNotBlank() && !isSearching,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                if (isSearching) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.height(20.dp).width(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Buscar")
+                }
+            }
+        }
+
+        if (isSearchActive) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Mostrando resultados de búsqueda",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                OutlinedButton(onClick = onClearSearch) {
+                    Text("Mostrar todos")
+                }
+            }
+        }
+
+        if (isSearching) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.height(16.dp).width(16.dp),
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Buscando...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
