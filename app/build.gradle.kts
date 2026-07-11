@@ -198,6 +198,9 @@ dependencyCheck {
     nvd {
         apiKey = System.getenv("NVD_API_KEY") ?: ""
         validForHours = 4
+        delay = 10000
+        resultsPerPage = 2000
+        maxRetryCount = 10
     }
     analyzers {
         ossIndexEnabled = false

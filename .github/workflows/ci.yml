@@ -5,7 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 0'
+ 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -93,11 +96,22 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
       - name: Install Android SDK API 36
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Get OWASP DC version
+        id: depcheck-version
+        run: |
+          VERSION=$(grep 'dependencyCheck' gradle/libs.versions.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
       - name: Cache OWASP Dependency Check data
         uses: actions/cache@v5
         with:
           path: ~/.dependency-check/data
-          key: ${{ runner.os }}-depcheck-${{ hashFiles('**/build.gradle.kts', '**/libs.versions.toml') }}
+          key: ${{ runner.os }}-depcheck-${{ steps.depcheck-version.outputs.version }}
           restore-keys: |
             ${{ runner.os }}-depcheck-
       - name: OWASP Dependency Check
