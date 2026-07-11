@@ -6,6 +6,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.mobiledevsecops.ui.empleado.EmpleadoScreen
+import com.example.mobiledevsecops.ui.empleadoactualizar.EmpleadoActualizarScreen
+import com.example.mobiledevsecops.ui.empleadocrear.EmpleadoCrearScreen
+import com.example.mobiledevsecops.ui.empleadoeliminar.EmpleadoEliminarScreen
 import com.example.mobiledevsecops.ui.index.IndexScreen
 import com.example.mobiledevsecops.ui.login.LoginScreen
 import com.example.mobiledevsecops.ui.usuario.UsuarioScreen
@@ -20,10 +24,17 @@ object Routes {
     const val USUARIO_CREAR = "usuario/crear"
     const val USUARIO_ACTUALIZAR = "usuario/actualizar/{id}"
     const val USUARIO_ELIMINAR = "usuario/eliminar/{id}"
+    const val EMPLEADO = "empleado/{page}"
+    const val EMPLEADO_CREAR = "empleado/crear"
+    const val EMPLEADO_ACTUALIZAR = "empleado/actualizar/{id}/{rowVersion}"
+    const val EMPLEADO_ELIMINAR = "empleado/eliminar/{id}/{rowVersion}"
 
     fun navToUsuario(page: Int = 1) = "usuario/$page"
     fun navToActualizar(id: Int) = "usuario/actualizar/$id"
     fun navToEliminar(id: Int) = "usuario/eliminar/$id"
+    fun navToEmpleado(page: Int = 1) = "empleado/$page"
+    fun navToActualizarEmpleado(id: Int, rowVersion: String) = "empleado/actualizar/$id/${java.net.URLEncoder.encode(rowVersion, "UTF-8")}"
+    fun navToEliminarEmpleado(id: Int, rowVersion: String) = "empleado/eliminar/$id/${java.net.URLEncoder.encode(rowVersion, "UTF-8")}"
 }
 
 @Composable
@@ -50,6 +61,9 @@ fun AppNavGraph(navController: NavHostController) {
                 },
                 onNavigateToUsuario = {
                     navController.navigate(Routes.navToUsuario())
+                },
+                onNavigateToEmpleado = {
+                    navController.navigate(Routes.navToEmpleado())
                 }
             )
         }
@@ -168,6 +182,117 @@ fun AppNavGraph(navController: NavHostController) {
                 onNavigateBack = { navController.popBackStack() },
                 onUsuarioEliminado = {
                     navController.previousBackStackEntry?.savedStateHandle?.set("reloadUsuarios", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                    navController.popBackStack()
+                },
+                onError = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(
+            route = Routes.EMPLEADO,
+            arguments = listOf(navArgument("page") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadEmpleados") ?: false
+            if (reloadSignal) {
+                backStackEntry.savedStateHandle["reloadEmpleados"] = false
+            }
+
+            val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
+            if (operationResult.isNotEmpty()) {
+                backStackEntry.savedStateHandle["operationResult"] = ""
+            }
+
+            EmpleadoScreen(
+                reloadSignal = reloadSignal,
+                operationResult = operationResult,
+                onNavigateBack = { navController.popBackStack() },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onNavigateToCreate = {
+                    navController.navigate(Routes.EMPLEADO_CREAR)
+                },
+                onNavigateToEdit = { id, rowVersion ->
+                    navController.navigate(Routes.navToActualizarEmpleado(id, rowVersion))
+                },
+                onNavigateToDelete = { id, rowVersion ->
+                    navController.navigate(Routes.navToEliminarEmpleado(id, rowVersion))
+                }
+            )
+        }
+        composable(Routes.EMPLEADO_CREAR) {
+            EmpleadoCrearScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onEmpleadoCreado = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadEmpleados", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                    navController.popBackStack()
+                },
+                onError = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(
+            route = Routes.EMPLEADO_ACTUALIZAR,
+            arguments = listOf(
+                navArgument("id") { type = NavType.IntType },
+                navArgument("rowVersion") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            val rowVersion = backStackEntry.arguments?.getString("rowVersion") ?: ""
+            EmpleadoActualizarScreen(
+                id = id,
+                rowVersion = rowVersion,
+                onNavigateBack = { navController.popBackStack() },
+                onEmpleadoActualizado = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadEmpleados", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                    navController.popBackStack()
+                },
+                onError = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(
+            route = Routes.EMPLEADO_ELIMINAR,
+            arguments = listOf(
+                navArgument("id") { type = NavType.IntType },
+                navArgument("rowVersion") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            val rowVersion = backStackEntry.arguments?.getString("rowVersion") ?: ""
+            EmpleadoEliminarScreen(
+                id = id,
+                rowVersion = rowVersion,
+                onNavigateBack = { navController.popBackStack() },
+                onEmpleadoEliminado = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadEmpleados", true)
                     navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
                     navController.popBackStack()
                 },

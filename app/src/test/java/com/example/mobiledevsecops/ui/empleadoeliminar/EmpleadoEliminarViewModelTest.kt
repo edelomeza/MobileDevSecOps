@@ -1,0 +1,121 @@
+package com.example.mobiledevsecops.ui.empleadoeliminar
+
+import com.example.mobiledevsecops.domain.model.Empleado
+import com.example.mobiledevsecops.domain.usecase.EliminarEmpleadoUseCase
+import com.example.mobiledevsecops.shared.fake.FakeEmpleadoRepository
+import com.example.mobiledevsecops.shared.rule.MainCoroutineRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class EmpleadoEliminarViewModelTest {
+
+    @get:Rule
+    val coroutineRule = MainCoroutineRule(StandardTestDispatcher())
+
+    private lateinit var fakeRepo: FakeEmpleadoRepository
+    private lateinit var useCase: EliminarEmpleadoUseCase
+    private lateinit var viewModel: EmpleadoEliminarViewModel
+
+    private val testEmpleado = Empleado(
+        id = 1,
+        strNombre = "Juan",
+        strAPaterno = "Perez",
+        strAMaterno = "Lopez",
+        strCURP = "HEXA010101HDFLNN01",
+        idEmpCatTipoEmpleado = 1,
+        rowVersion = "AAAAAAAAB9E="
+    )
+
+    @Before
+    fun setUp() {
+        fakeRepo = FakeEmpleadoRepository()
+        fakeRepo.givenEmpleados(listOf(testEmpleado))
+        useCase = EliminarEmpleadoUseCase(fakeRepo)
+        viewModel = EmpleadoEliminarViewModel(
+            useCase, fakeRepo,
+            EmpleadoEliminarParams(1, "AAAAAAAAB9E=")
+        )
+        coroutineRule.testDispatcher.scheduler.advanceUntilIdle()
+    }
+
+    @Test
+    fun `estado inicial con parametros correctos`() {
+        val state = viewModel.uiState.value
+        assertEquals(1, state.id)
+        assertEquals("Juan", state.nombre)
+        assertEquals("Perez", state.aPaterno)
+        assertEquals("Lopez", state.aMaterno)
+        assertEquals("HEXA010101HDFLNN01", state.curp)
+        assertEquals(1, state.idTipoEmpleado)
+        assertEquals("AAAAAAAAB9E=", state.rowVersion)
+    }
+
+    @Test
+    fun `eliminar empleado exitoso emite EmpleadoEliminado`() = runTest {
+        val events = mutableListOf<EmpleadoEliminarEvent>()
+        val job = launch {
+            viewModel.events.collect { events.add(it) }
+        }
+
+        viewModel.onEliminarClicked()
+        coroutineRule.testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(events.any { it is EmpleadoEliminarEvent.EmpleadoEliminado })
+        job.cancel()
+    }
+
+    @Test
+    fun `eliminar con error del servidor emite Error`() = runTest {
+        fakeRepo.shouldThrowException = true
+
+        val events = mutableListOf<EmpleadoEliminarEvent>()
+        val job = launch {
+            viewModel.events.collect { events.add(it) }
+        }
+
+        viewModel.onEliminarClicked()
+        coroutineRule.testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(events.any { it is EmpleadoEliminarEvent.Error })
+        job.cancel()
+    }
+
+    @Test
+    fun `eliminar con conflicto emite Error`() = runTest {
+        fakeRepo.shouldThrowConflict = true
+
+        val events = mutableListOf<EmpleadoEliminarEvent>()
+        val job = launch {
+            viewModel.events.collect { events.add(it) }
+        }
+
+        viewModel.onEliminarClicked()
+        coroutineRule.testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(events.any { it is EmpleadoEliminarEvent.Error })
+        job.cancel()
+    }
+
+    @Test
+    fun `cancelar emite NavigateBack`() = runTest {
+        val events = mutableListOf<EmpleadoEliminarEvent>()
+        val job = launch {
+            viewModel.events.collect { events.add(it) }
+        }
+        viewModel.onCancelarClicked()
+        coroutineRule.testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(events.any { it is EmpleadoEliminarEvent.NavigateBack })
+        job.cancel()
+    }
+}
