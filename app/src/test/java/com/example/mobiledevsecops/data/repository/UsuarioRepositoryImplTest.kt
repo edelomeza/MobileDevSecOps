@@ -241,6 +241,56 @@ class UsuarioRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `buscarUsuarios retorna UsuarioPage correctamente`() = runTest {
+        mockEngine = MockEngine { request ->
+            assertEquals("/api/v1/Usuario/buscar", request.url.encodedPath)
+            assertEquals("Juan", request.url.parameters["texto"])
+
+            respond(
+                content = ByteReadChannel(json.encodeToString(usuarioListResponse)),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json")
+            )
+        }
+        val httpClient = HttpClient(mockEngine) {
+            install(ContentNegotiation) { json() }
+        }
+        usuarioApi = UsuarioApi(httpClient)
+        repository = UsuarioRepositoryImpl(usuarioApi)
+
+        val result = repository.buscarUsuarios("Juan", 1, 10)
+
+        assertEquals(1, result.items.size)
+        assertEquals(1, result.pageNumber)
+        assertEquals(1, result.totalPages)
+        assertEquals(1, result.totalCount)
+        assertEquals("Juan Pérez", result.items.first().strNombre)
+    }
+
+    @Test
+    fun `buscarUsuarios con error 401 lanza SessionExpiredException`() = runTest {
+        mockEngine = MockEngine { _ ->
+            respond(
+                content = ByteReadChannel(""),
+                status = HttpStatusCode.Unauthorized,
+                headers = headersOf(HttpHeaders.ContentType, "application/json")
+            )
+        }
+        val httpClient = HttpClient(mockEngine) {
+            install(ContentNegotiation) { json() }
+        }
+        usuarioApi = UsuarioApi(httpClient)
+        repository = UsuarioRepositoryImpl(usuarioApi)
+
+        try {
+            repository.buscarUsuarios("Juan", 1, 10)
+            fail("Expected SessionExpiredException")
+        } catch (e: SessionExpiredException) {
+            // expected
+        }
+    }
+
     companion object {
         private val usuarioListResponse = UsuarioListResponse(
             items = listOf(

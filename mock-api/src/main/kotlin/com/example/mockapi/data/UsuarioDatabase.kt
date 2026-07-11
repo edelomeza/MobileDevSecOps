@@ -71,4 +71,20 @@ class UsuarioDatabase {
     fun delete(id: Int, rowVersion: String): Boolean {
         return usuarios.removeIf { it.id == id }
     }
+
+    fun buscar(texto: String, page: Int, pageSize: Int): List<Usuario> {
+        val filtered = usuarios.filter {
+            it.nombre.contains(texto, ignoreCase = true) ||
+                it.correo.contains(texto, ignoreCase = true)
+        }
+        val from = (page - 1) * pageSize
+        return filtered.drop(from).take(pageSize)
+    }
+
+    fun countSearch(texto: String): Int {
+        return usuarios.count {
+            it.nombre.contains(texto, ignoreCase = true) ||
+                it.correo.contains(texto, ignoreCase = true)
+        }
+    }
 }

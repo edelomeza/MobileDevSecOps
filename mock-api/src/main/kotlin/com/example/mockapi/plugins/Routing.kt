@@ -75,6 +75,25 @@ fun Application.configureRouting(
             )
         }
 
+        get("/api/v1/Usuario/buscar") {
+            val texto = call.request.queryParameters["texto"] ?: ""
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 8
+            val totalCount = database.countSearch(texto)
+            val totalPages = if (totalCount == 0) 1 else (totalCount + pageSize - 1) / pageSize
+            val items = database.buscar(texto, page, pageSize)
+
+            call.respond(
+                UsuarioListResponse(
+                    items = items.map { it.toDto() },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
         post("/api/v1/Usuario") {
             val request = call.receive<UserCreateRequest>()
             val usuario = usuarioDatabase.create(request.strNombre, request.strCorreoElectronico)

@@ -45,6 +45,28 @@ class FakeUsuarioRepository : UsuarioRepository {
         )
     }
 
+    override suspend fun buscarUsuarios(texto: String, page: Int, pageSize: Int): UsuarioPage {
+        if (shouldThrowSessionExpired) throw SessionExpiredException()
+        if (shouldThrowException) throw Exception(exceptionMessage)
+
+        val filtered = _usuarios.filter {
+            it.strNombre.contains(texto, ignoreCase = true) ||
+                it.strCorreoElectronico.contains(texto, ignoreCase = true)
+        }
+        val filteredTotal = filtered.size
+        val filteredTotalPages = maxOf(1, (filteredTotal + pageSize - 1) / pageSize)
+        val start = (page - 1) * pageSize
+        val end = minOf(start + pageSize, filteredTotal)
+        val items = if (start < filteredTotal) filtered.subList(start, end) else emptyList()
+
+        return UsuarioPage(
+            items = items,
+            totalCount = filteredTotal,
+            pageNumber = page,
+            totalPages = filteredTotalPages
+        )
+    }
+
     override suspend fun crearUsuario(
         strNombre: String,
         strPWD: String,
