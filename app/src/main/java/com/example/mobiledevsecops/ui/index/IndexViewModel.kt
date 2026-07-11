@@ -20,6 +20,7 @@ data class IndexUiState(
 sealed class IndexEvent {
     data object NavigateToLogin : IndexEvent()
     data object NavigateToUsuario : IndexEvent()
+    data object NavigateToEmpleado : IndexEvent()
 }
 
 class IndexViewModel(
@@ -47,6 +48,13 @@ class IndexViewModel(
         if (BuildConfig.DEBUG) Logger.d("Navegando a Usuario sin verificar token local")
         viewModelScope.launch {
             _events.emit(IndexEvent.NavigateToUsuario)
+        }
+    }
+
+    fun onNavigateToEmpleado() {
+        if (BuildConfig.DEBUG) Logger.d("Navegando a Empleado sin verificar token local")
+        viewModelScope.launch {
+            _events.emit(IndexEvent.NavigateToEmpleado)
         }
     }
 }

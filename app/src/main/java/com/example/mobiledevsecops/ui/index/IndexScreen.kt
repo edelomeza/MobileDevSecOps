@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,6 +46,7 @@ import org.koin.androidx.compose.koinViewModel
 fun IndexScreen(
     onSessionExpired: () -> Unit,
     onNavigateToUsuario: () -> Unit,
+    onNavigateToEmpleado: () -> Unit,
     viewModel: IndexViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -56,6 +58,7 @@ fun IndexScreen(
             when (event) {
                 is IndexEvent.NavigateToLogin -> onSessionExpired()
                 is IndexEvent.NavigateToUsuario -> onNavigateToUsuario()
+                is IndexEvent.NavigateToEmpleado -> onNavigateToEmpleado()
             }
         }
     }
@@ -96,6 +99,16 @@ fun IndexScreen(
                     onClick = {
                         scope.launch { drawerState.close() }
                         viewModel.onNavigateToUsuario()
+                    }
+                )
+
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Default.Work, contentDescription = null) },
+                    label = { Text("Empleado") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        viewModel.onNavigateToEmpleado()
                     }
                 )
 

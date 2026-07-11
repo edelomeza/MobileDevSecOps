@@ -1,5 +1,7 @@
 package com.example.mockapi.plugins
 
+import com.example.mockapi.data.EmpleadoDatabase
+import com.example.mockapi.data.TipoEmpleadoDatabase
 import com.example.mockapi.data.UsuarioDatabase
 import com.example.mockapi.model.*
 import io.ktor.http.*
@@ -17,7 +19,11 @@ import kotlinx.serialization.json.put
 @Serializable
 data class ErrorResponse(val message: String)
 
-fun Application.configureRouting(database: UsuarioDatabase) {
+fun Application.configureRouting(
+    usuarioDatabase: UsuarioDatabase,
+    empleadoDatabase: EmpleadoDatabase,
+    tipoEmpleadoDatabase: TipoEmpleadoDatabase
+) {
     install(CORS) {
         anyHost()
         allowHeader(HttpHeaders.ContentType)
@@ -54,9 +60,9 @@ fun Application.configureRouting(database: UsuarioDatabase) {
         get("/api/v1/Usuario") {
             val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 8
-            val totalCount = database.count()
+            val totalCount = usuarioDatabase.count()
             val totalPages = (totalCount + pageSize - 1) / pageSize
-            val items = database.list(page, pageSize)
+            val items = usuarioDatabase.list(page, pageSize)
 
             call.respond(
                 UsuarioListResponse(
@@ -90,7 +96,7 @@ fun Application.configureRouting(database: UsuarioDatabase) {
 
         post("/api/v1/Usuario") {
             val request = call.receive<UserCreateRequest>()
-            val usuario = database.create(request.strNombre, request.strCorreoElectronico)
+            val usuario = usuarioDatabase.create(request.strNombre, request.strCorreoElectronico)
             call.respond(status = HttpStatusCode.Created, message = usuario.toDto())
         }
 
@@ -98,7 +104,7 @@ fun Application.configureRouting(database: UsuarioDatabase) {
             val id = call.parameters["id"]?.toIntOrNull()
                 ?: return@put call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
             val request = call.receive<UserUpdateRequest>()
-            val updated = database.update(id, request)
+            val updated = usuarioDatabase.update(id, request)
             if (updated != null) {
                 call.respond(updated.toDto())
             } else {
@@ -110,10 +116,127 @@ fun Application.configureRouting(database: UsuarioDatabase) {
             val id = call.parameters["id"]?.toIntOrNull()
                 ?: return@delete call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
             val request = call.receive<UserDeleteRequest>()
-            if (database.delete(id, request.rowVersion)) {
+            if (usuarioDatabase.delete(id, request.rowVersion)) {
                 call.respond(LogoutResponse(message = "Usuario eliminado correctamente"))
             } else {
                 call.respond(HttpStatusCode.NotFound, ErrorResponse("Usuario no encontrado"))
+            }
+        }
+
+        get("/api/v1/TipoEmpleado") {
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 50
+            val totalCount = tipoEmpleadoDatabase.count()
+            val totalPages = (totalCount + pageSize - 1) / pageSize
+            val items = tipoEmpleadoDatabase.list(page, pageSize)
+
+            call.respond(
+                EmpCatTipoEmpleadoListResponse(
+                    items = items.map { it.toDto() },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
+        get("/api/v1/TipoEmpleado/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull()
+                ?: return@get call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
+            val tipo = tipoEmpleadoDatabase.getById(id)
+            if (tipo != null) {
+                call.respond(tipo.toDto())
+            } else {
+                call.respond(HttpStatusCode.NotFound, ErrorResponse("Tipo de empleado no encontrado"))
+            }
+        }
+
+        get("/api/v1/Empleado") {
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 8
+            val totalCount = empleadoDatabase.count()
+            val totalPages = (totalCount + pageSize - 1) / pageSize
+            val items = empleadoDatabase.list(page, pageSize)
+
+            call.respond(
+                EmpEmpleadoListResponse(
+                    items = items.map { it.toDto() },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
+        get("/api/v1/Empleado/buscar") {
+            val texto = call.request.queryParameters["texto"]
+            val idTipoEmpleado = call.request.queryParameters["idTipoEmpleado"]?.toIntOrNull()
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 8
+            val items = empleadoDatabase.search(texto, idTipoEmpleado, page, pageSize)
+            val totalCount = empleadoDatabase.searchCount(texto, idTipoEmpleado)
+            val totalPages = (totalCount + pageSize - 1) / pageSize
+
+            call.respond(
+                EmpEmpleadoListResponse(
+                    items = items.map { it.toDto() },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
+        get("/api/v1/Empleado/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull()
+                ?: return@get call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
+            val emp = empleadoDatabase.getById(id)
+            if (emp != null) {
+                call.respond(emp.toDto())
+            } else {
+                call.respond(HttpStatusCode.NotFound, ErrorResponse("Empleado no encontrado"))
+            }
+        }
+
+        post("/api/v1/Empleado") {
+            val request = call.receive<EmpEmpleadoCreateRequest>()
+            val emp = empleadoDatabase.create(
+                request.strNombre,
+                request.strAPaterno,
+                request.strAMaterno,
+                request.strCURP,
+                request.idEmpCatTipoEmpleado
+            )
+            call.respond(status = HttpStatusCode.Created, message = emp.toDto())
+        }
+
+        put("/api/v1/Empleado/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull()
+                ?: return@put call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
+            val request = call.receive<EmpEmpleadoUpdateRequest>()
+            val updated = empleadoDatabase.update(
+                id, request.strNombre, request.strAPaterno,
+                request.strAMaterno, request.strCURP,
+                request.idEmpCatTipoEmpleado, request.rowVersion
+            )
+            if (updated != null) {
+                call.respond(status = HttpStatusCode.NoContent)
+            } else {
+                call.respond(HttpStatusCode.NotFound, ErrorResponse("Empleado no encontrado"))
+            }
+        }
+
+        delete("/api/v1/Empleado/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull()
+                ?: return@delete call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
+            val request = call.receive<EmpEmpleadoDeleteRequest>()
+            if (empleadoDatabase.delete(id, request.rowVersion)) {
+                call.respond(LogoutResponse(message = "Empleado eliminado correctamente"))
+            } else {
+                call.respond(HttpStatusCode.NotFound, ErrorResponse("Empleado no encontrado"))
             }
         }
     }
