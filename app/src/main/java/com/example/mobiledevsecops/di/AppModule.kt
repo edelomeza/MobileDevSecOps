@@ -2,23 +2,36 @@ package com.example.mobiledevsecops.di
 
 import com.example.mobiledevsecops.data.local.TokenManager
 import com.example.mobiledevsecops.data.remote.AuthApi
+import com.example.mobiledevsecops.data.remote.ClienteApi
 import com.example.mobiledevsecops.data.remote.EmpleadoApi
 import com.example.mobiledevsecops.data.remote.UsuarioApi
 import com.example.mobiledevsecops.data.repository.AuthRepositoryImpl
+import com.example.mobiledevsecops.data.repository.ClienteRepositoryImpl
 import com.example.mobiledevsecops.data.repository.EmpleadoRepositoryImpl
 import com.example.mobiledevsecops.data.repository.UsuarioRepositoryImpl
 import com.example.mobiledevsecops.domain.repository.AuthRepository
+import com.example.mobiledevsecops.domain.repository.ClienteRepository
 import com.example.mobiledevsecops.domain.repository.EmpleadoRepository
 import com.example.mobiledevsecops.domain.repository.UsuarioRepository
+import com.example.mobiledevsecops.domain.usecase.ActualizarClienteUseCase
 import com.example.mobiledevsecops.domain.usecase.ActualizarEmpleadoUseCase
 import com.example.mobiledevsecops.domain.usecase.ActualizarUsuarioUseCase
+import com.example.mobiledevsecops.domain.usecase.BuscarClientesUseCase
 import com.example.mobiledevsecops.domain.usecase.BuscarUsuariosUseCase
+import com.example.mobiledevsecops.domain.usecase.CrearClienteUseCase
 import com.example.mobiledevsecops.domain.usecase.CrearEmpleadoUseCase
 import com.example.mobiledevsecops.domain.usecase.CrearUsuarioUseCase
+import com.example.mobiledevsecops.domain.usecase.EliminarClienteUseCase
 import com.example.mobiledevsecops.domain.usecase.EliminarEmpleadoUseCase
 import com.example.mobiledevsecops.domain.usecase.EliminarUsuarioUseCase
 import com.example.mobiledevsecops.domain.usecase.LoginUseCase
 import com.example.mobiledevsecops.domain.usecase.LogoutUseCase
+import com.example.mobiledevsecops.ui.cliente.ClienteViewModel
+import com.example.mobiledevsecops.ui.clienteactualizar.ClienteActualizarParams
+import com.example.mobiledevsecops.ui.clienteactualizar.ClienteActualizarViewModel
+import com.example.mobiledevsecops.ui.clientecrear.ClienteCrearViewModel
+import com.example.mobiledevsecops.ui.clienteeliminar.ClienteEliminarParams
+import com.example.mobiledevsecops.ui.clienteeliminar.ClienteEliminarViewModel
 import com.example.mobiledevsecops.ui.empleado.EmpleadoViewModel
 import com.example.mobiledevsecops.ui.empleadoactualizar.EmpleadoActualizarParams
 import com.example.mobiledevsecops.ui.empleadoactualizar.EmpleadoActualizarViewModel
@@ -71,5 +84,20 @@ val appModule = module {
     }
     viewModel { params ->
         EmpleadoEliminarViewModel(get(), get(), params[0] as EmpleadoEliminarParams)
+    }
+
+    single<ClienteRepository> { ClienteRepositoryImpl(get()) }
+    factory { ClienteApi(get()) }
+    factory { BuscarClientesUseCase(get()) }
+    factory { CrearClienteUseCase(get()) }
+    factory { ActualizarClienteUseCase(get()) }
+    factory { EliminarClienteUseCase(get()) }
+    viewModel { ClienteViewModel(get(), get()) }
+    viewModel { ClienteCrearViewModel(get()) }
+    viewModel { params ->
+        ClienteActualizarViewModel(get(), params[0] as ClienteActualizarParams)
+    }
+    viewModel { params ->
+        ClienteEliminarViewModel(get(), params[0] as ClienteEliminarParams)
     }
 }
