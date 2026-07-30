@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
@@ -47,6 +48,7 @@ fun IndexScreen(
     onSessionExpired: () -> Unit,
     onNavigateToUsuario: () -> Unit,
     onNavigateToEmpleado: () -> Unit,
+    onNavigateToCliente: () -> Unit,
     viewModel: IndexViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -59,6 +61,7 @@ fun IndexScreen(
                 is IndexEvent.NavigateToLogin -> onSessionExpired()
                 is IndexEvent.NavigateToUsuario -> onNavigateToUsuario()
                 is IndexEvent.NavigateToEmpleado -> onNavigateToEmpleado()
+                is IndexEvent.NavigateToCliente -> onNavigateToCliente()
             }
         }
     }
@@ -109,6 +112,16 @@ fun IndexScreen(
                     onClick = {
                         scope.launch { drawerState.close() }
                         viewModel.onNavigateToEmpleado()
+                    }
+                )
+
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Default.People, contentDescription = null) },
+                    label = { Text("Cliente") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        viewModel.onNavigateToCliente()
                     }
                 )
 

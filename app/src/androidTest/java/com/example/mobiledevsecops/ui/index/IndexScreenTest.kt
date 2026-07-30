@@ -32,6 +32,7 @@ class IndexScreenTest {
                 onSessionExpired = { },
                 onNavigateToUsuario = { },
                 onNavigateToEmpleado = { },
+                onNavigateToCliente = { },
                 viewModel = viewModel
             )
         }
@@ -48,6 +49,7 @@ class IndexScreenTest {
                 onSessionExpired = { },
                 onNavigateToUsuario = { },
                 onNavigateToEmpleado = { },
+                onNavigateToCliente = { },
                 viewModel = viewModel
             )
         }
@@ -58,6 +60,7 @@ class IndexScreenTest {
         composeTestRule.onNodeWithText("Menú de navegación").assertIsDisplayed()
         composeTestRule.onNodeWithText("Usuario").assertIsDisplayed()
         composeTestRule.onNodeWithText("Empleado").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Cliente").assertIsDisplayed()
         composeTestRule.onNodeWithText("Cerrar").assertIsDisplayed()
     }
 }

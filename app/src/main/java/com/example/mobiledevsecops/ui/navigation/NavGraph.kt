@@ -6,6 +6,12 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.mobiledevsecops.ui.cliente.ClienteScreen
+import com.example.mobiledevsecops.ui.clienteactualizar.ClienteActualizarParams
+import com.example.mobiledevsecops.ui.clienteactualizar.ClienteActualizarScreen
+import com.example.mobiledevsecops.ui.clientecrear.ClienteCrearScreen
+import com.example.mobiledevsecops.ui.clienteeliminar.ClienteEliminarParams
+import com.example.mobiledevsecops.ui.clienteeliminar.ClienteEliminarScreen
 import com.example.mobiledevsecops.ui.empleado.EmpleadoScreen
 import com.example.mobiledevsecops.ui.empleadoactualizar.EmpleadoActualizarScreen
 import com.example.mobiledevsecops.ui.empleadocrear.EmpleadoCrearScreen
@@ -28,6 +34,10 @@ object Routes {
     const val EMPLEADO_CREAR = "empleado/crear"
     const val EMPLEADO_ACTUALIZAR = "empleado/actualizar/{id}/{rowVersion}"
     const val EMPLEADO_ELIMINAR = "empleado/eliminar/{id}/{rowVersion}"
+    const val CLIENTE = "cliente/{page}"
+    const val CLIENTE_CREAR = "cliente/crear"
+    const val CLIENTE_ACTUALIZAR = "cliente/actualizar/{id}"
+    const val CLIENTE_ELIMINAR = "cliente/eliminar/{id}"
 
     fun navToUsuario(page: Int = 1) = "usuario/$page"
     fun navToActualizar(id: Int) = "usuario/actualizar/$id"
@@ -35,6 +45,9 @@ object Routes {
     fun navToEmpleado(page: Int = 1) = "empleado/$page"
     fun navToActualizarEmpleado(id: Int, rowVersion: String) = "empleado/actualizar/$id/${java.net.URLEncoder.encode(rowVersion, "UTF-8")}"
     fun navToEliminarEmpleado(id: Int, rowVersion: String) = "empleado/eliminar/$id/${java.net.URLEncoder.encode(rowVersion, "UTF-8")}"
+    fun navToCliente(page: Int = 1) = "cliente/$page"
+    fun navToActualizarCliente(id: Int) = "cliente/actualizar/$id"
+    fun navToEliminarCliente(id: Int) = "cliente/eliminar/$id"
 }
 
 @Composable
@@ -64,6 +77,9 @@ fun AppNavGraph(navController: NavHostController) {
                 },
                 onNavigateToEmpleado = {
                     navController.navigate(Routes.navToEmpleado())
+                },
+                onNavigateToCliente = {
+                    navController.navigate(Routes.navToCliente())
                 }
             )
         }
@@ -293,6 +309,151 @@ fun AppNavGraph(navController: NavHostController) {
                 onNavigateBack = { navController.popBackStack() },
                 onEmpleadoEliminado = {
                     navController.previousBackStackEntry?.savedStateHandle?.set("reloadEmpleados", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                    navController.popBackStack()
+                },
+                onError = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(
+            route = Routes.CLIENTE,
+            arguments = listOf(navArgument("page") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadClientes") ?: false
+            if (reloadSignal) {
+                backStackEntry.savedStateHandle["reloadClientes"] = false
+            }
+
+            val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
+            if (operationResult.isNotEmpty()) {
+                backStackEntry.savedStateHandle["operationResult"] = ""
+            }
+
+            ClienteScreen(
+                reloadSignal = reloadSignal,
+                operationResult = operationResult,
+                onNavigateBack = { navController.popBackStack() },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onNavigateToCreate = {
+                    navController.navigate(Routes.CLIENTE_CREAR)
+                },
+                onNavigateToEdit = { id, nombreCliente, direccionCliente, correo, telefono, rowVersion ->
+                    navController.currentBackStackEntry?.savedStateHandle?.apply {
+                        set("edit_nombreCliente", nombreCliente)
+                        set("edit_direccionCliente", direccionCliente)
+                        set("edit_correo", correo)
+                        set("edit_telefono", telefono)
+                        set("edit_rowVersion", rowVersion)
+                    }
+                    navController.navigate(Routes.navToActualizarCliente(id))
+                },
+                onNavigateToDelete = { id, nombreCliente, direccionCliente, correo, telefono, rowVersion ->
+                    navController.currentBackStackEntry?.savedStateHandle?.apply {
+                        set("delete_nombreCliente", nombreCliente)
+                        set("delete_direccionCliente", direccionCliente)
+                        set("delete_correo", correo)
+                        set("delete_telefono", telefono)
+                        set("delete_rowVersion", rowVersion)
+                    }
+                    navController.navigate(Routes.navToEliminarCliente(id))
+                }
+            )
+        }
+        composable(Routes.CLIENTE_CREAR) {
+            ClienteCrearScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onClienteCreado = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadClientes", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                    navController.popBackStack()
+                },
+                onError = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(
+            route = Routes.CLIENTE_ACTUALIZAR,
+            arguments = listOf(
+                navArgument("id") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            val prevHandle = navController.previousBackStackEntry?.savedStateHandle
+            val nombreCliente = prevHandle?.get<String>("edit_nombreCliente")?.also { prevHandle.remove<String>("edit_nombreCliente") } ?: ""
+            val direccionCliente = prevHandle?.get<String>("edit_direccionCliente")?.also { prevHandle.remove<String>("edit_direccionCliente") }
+            val correo = prevHandle?.get<String>("edit_correo")?.also { prevHandle.remove<String>("edit_correo") } ?: ""
+            val telefono = prevHandle?.get<String>("edit_telefono")?.also { prevHandle.remove<String>("edit_telefono") } ?: ""
+            val rowVersion = prevHandle?.get<String>("edit_rowVersion")?.also { prevHandle.remove<String>("edit_rowVersion") } ?: ""
+            ClienteActualizarScreen(
+                params = ClienteActualizarParams(
+                    id = id,
+                    nombreCliente = nombreCliente,
+                    direccionCliente = direccionCliente,
+                    correo = correo,
+                    telefono = telefono,
+                    rowVersion = rowVersion
+                ),
+                onNavigateBack = { navController.popBackStack() },
+                onClienteActualizado = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadClientes", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                    navController.popBackStack()
+                },
+                onError = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(
+            route = Routes.CLIENTE_ELIMINAR,
+            arguments = listOf(
+                navArgument("id") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            val prevHandle = navController.previousBackStackEntry?.savedStateHandle
+            val nombreCliente = prevHandle?.get<String>("delete_nombreCliente")?.also { prevHandle.remove<String>("delete_nombreCliente") } ?: ""
+            val direccionCliente = prevHandle?.get<String>("delete_direccionCliente")?.also { prevHandle.remove<String>("delete_direccionCliente") }
+            val correo = prevHandle?.get<String>("delete_correo")?.also { prevHandle.remove<String>("delete_correo") } ?: ""
+            val telefono = prevHandle?.get<String>("delete_telefono")?.also { prevHandle.remove<String>("delete_telefono") } ?: ""
+            val rowVersion = prevHandle?.get<String>("delete_rowVersion")?.also { prevHandle.remove<String>("delete_rowVersion") } ?: ""
+            ClienteEliminarScreen(
+                params = ClienteEliminarParams(
+                    id = id,
+                    nombreCliente = nombreCliente,
+                    direccionCliente = direccionCliente,
+                    correo = correo,
+                    telefono = telefono,
+                    rowVersion = rowVersion
+                ),
+                onNavigateBack = { navController.popBackStack() },
+                onClienteEliminado = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadClientes", true)
                     navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
                     navController.popBackStack()
                 },
