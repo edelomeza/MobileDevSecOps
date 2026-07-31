@@ -57,7 +57,7 @@ class EmpleadoDatabase {
     }
 
     fun search(texto: String?, idTipoEmpleado: Int?, page: Int, pageSize: Int): List<Empleado> {
-        var filtered = empleados
+        var filtered: List<Empleado> = empleados
 
         if (!texto.isNullOrBlank()) {
             val searchLower = texto.lowercase()
@@ -77,7 +77,7 @@ class EmpleadoDatabase {
     }
 
     fun searchCount(texto: String?, idTipoEmpleado: Int?): Int {
-        var filtered = empleados
+        var filtered: List<Empleado> = empleados
         if (!texto.isNullOrBlank()) {
             val searchLower = texto.lowercase()
             filtered = filtered.filter {

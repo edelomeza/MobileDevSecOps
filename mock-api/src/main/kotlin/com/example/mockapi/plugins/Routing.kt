@@ -2,12 +2,14 @@ package com.example.mockapi.plugins
 
 import com.example.mockapi.data.EmpleadoDatabase
 import com.example.mockapi.data.ProductoDatabase
+import com.example.mockapi.data.ProductoDeleteResult
+import com.example.mockapi.data.ProductoUpdateResult
 import com.example.mockapi.data.TipoEmpleadoDatabase
 import com.example.mockapi.data.UsuarioDatabase
 import com.example.mockapi.model.*
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.cors.*
+import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -81,9 +83,9 @@ fun Application.configureRouting(
             val texto = call.request.queryParameters["texto"] ?: ""
             val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 8
-            val totalCount = database.countSearch(texto)
+            val totalCount = usuarioDatabase.countSearch(texto)
             val totalPages = if (totalCount == 0) 1 else (totalCount + pageSize - 1) / pageSize
-            val items = database.buscar(texto, page, pageSize)
+            val items = usuarioDatabase.buscar(texto, page, pageSize)
 
             call.respond(
                 UsuarioListResponse(
@@ -225,7 +227,7 @@ fun Application.configureRouting(
                 request.idEmpCatTipoEmpleado, request.rowVersion
             )
             if (updated != null) {
-                call.respond(status = HttpStatusCode.NoContent)
+                call.respond(HttpStatusCode.NoContent)
             } else {
                 call.respond(HttpStatusCode.NotFound, ErrorResponse("Empleado no encontrado"))
             }
@@ -295,11 +297,16 @@ fun Application.configureRouting(
             val id = call.parameters["id"]?.toIntOrNull()
                 ?: return@put call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
             val request = call.receive<ProductUpdateRequest>()
-            val updated = productoDatabase.update(id, request)
-            if (updated != null) {
-                call.respond(updated.toDto())
-            } else {
-                call.respond(HttpStatusCode.NotFound, ErrorResponse("Producto no encontrado"))
+            when (val result = productoDatabase.update(id, request)) {
+                is ProductoUpdateResult.Success -> call.respond(result.producto.toDto())
+                is ProductoUpdateResult.Conflict -> call.respond(
+                    HttpStatusCode.Conflict,
+                    ErrorResponse("El registro ha sido modificado por otro usuario")
+                )
+                is ProductoUpdateResult.NotFound -> call.respond(
+                    HttpStatusCode.NotFound,
+                    ErrorResponse("Producto no encontrado")
+                )
             }
         }
 
@@ -307,10 +314,18 @@ fun Application.configureRouting(
             val id = call.parameters["id"]?.toIntOrNull()
                 ?: return@delete call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
             val request = call.receive<ProductDeleteRequest>()
-            if (productoDatabase.delete(id, request.rowVersion)) {
-                call.respond(LogoutResponse(message = "Producto eliminado correctamente"))
-            } else {
-                call.respond(HttpStatusCode.NotFound, ErrorResponse("Producto no encontrado"))
+            when (productoDatabase.delete(id, request.rowVersion)) {
+                is ProductoDeleteResult.Deleted -> call.respond(
+                    LogoutResponse(message = "Producto eliminado correctamente")
+                )
+                is ProductoDeleteResult.Conflict -> call.respond(
+                    HttpStatusCode.Conflict,
+                    ErrorResponse("El registro ha sido modificado por otro usuario")
+                )
+                is ProductoDeleteResult.NotFound -> call.respond(
+                    HttpStatusCode.NotFound,
+                    ErrorResponse("Producto no encontrado")
+                )
             }
         }
     }

@@ -24,6 +24,18 @@ data class Producto(
     )
 }
 
+sealed class ProductoUpdateResult {
+    data class Success(val producto: Producto) : ProductoUpdateResult()
+    data object NotFound : ProductoUpdateResult()
+    data object Conflict : ProductoUpdateResult()
+}
+
+sealed class ProductoDeleteResult {
+    data object Deleted : ProductoDeleteResult()
+    data object NotFound : ProductoDeleteResult()
+    data object Conflict : ProductoDeleteResult()
+}
+
 class ProductoDatabase {
     private val productos = mutableListOf(
         Producto(1, "Laptop HP", "https://example.com/laptop.jpg", "Laptop HP 15.6 pulgadas", 10, 12500.00),
@@ -76,21 +88,29 @@ class ProductoDatabase {
         return producto
     }
 
-    fun update(id: Int, request: ProductUpdateRequest): Producto? {
+    fun update(id: Int, request: ProductUpdateRequest): ProductoUpdateResult {
         val index = productos.indexOfFirst { it.id == id }
-        if (index == -1) return null
-        productos[index] = productos[index].copy(
+        if (index == -1) return ProductoUpdateResult.NotFound
+        val current = productos[index]
+        if (current.rowVersion != request.rowVersion) return ProductoUpdateResult.Conflict
+        val updated = current.copy(
             nombreProducto = request.strNombreProducto,
             urlImagen = request.strURLImagen,
             descripcion = request.strDescripcion,
             numeroExistencia = request.intNumeroExistencia,
-            precio = request.decPrecio
+            precio = request.decPrecio,
+            rowVersion = UUID.randomUUID().toString()
         )
-        return productos[index]
+        productos[index] = updated
+        return ProductoUpdateResult.Success(updated)
     }
 
-    fun delete(id: Int, rowVersion: String): Boolean {
-        return productos.removeIf { it.id == id }
+    fun delete(id: Int, rowVersion: String): ProductoDeleteResult {
+        val index = productos.indexOfFirst { it.id == id }
+        if (index == -1) return ProductoDeleteResult.NotFound
+        if (productos[index].rowVersion != rowVersion) return ProductoDeleteResult.Conflict
+        productos.removeAt(index)
+        return ProductoDeleteResult.Deleted
     }
 
     fun buscar(texto: String, page: Int, pageSize: Int): List<Producto> {
