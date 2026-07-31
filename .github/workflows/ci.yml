@@ -114,6 +114,7 @@ jobs:
           key: ${{ runner.os }}-depcheck-${{ steps.depcheck-version.outputs.version }}
           restore-keys: |
             ${{ runner.os }}-depcheck-
+          save-always: true
       - name: OWASP Dependency Check
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}

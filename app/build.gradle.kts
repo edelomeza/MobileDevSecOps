@@ -197,9 +197,9 @@ dependencyCheck {
     suppressionFile = rootProject.file("dependency-check-suppressions.xml").toString()
     nvd {
         apiKey = System.getenv("NVD_API_KEY") ?: ""
-        validForHours = 4
+        validForHours = 24
         delay = 10000
-        resultsPerPage = 2000
+        resultsPerPage = 1000
         maxRetryCount = 10
     }
     analyzers {
