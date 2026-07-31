@@ -1,6 +1,7 @@
 package com.example.mobiledevsecops.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -58,6 +59,9 @@ object Routes {
     fun navToCliente(page: Int = 1) = "cliente/$page"
     fun navToActualizarCliente(id: Int) = "cliente/actualizar/$id"
     fun navToEliminarCliente(id: Int) = "cliente/eliminar/$id"
+}
+
+object ProductoRoutes {
     fun navToProducto(page: Int = 1) = "producto/$page"
     fun navToActualizarProducto(id: Int) = "producto/actualizar/$id"
     fun navToEliminarProducto(id: Int) = "producto/eliminar/$id"
@@ -69,571 +73,603 @@ fun AppNavGraph(navController: NavHostController) {
         navController = navController,
         startDestination = Routes.LOGIN
     ) {
-        composable(Routes.LOGIN) {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Routes.INDEX) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
-                }
-            )
-        }
-        composable(Routes.INDEX) {
-            IndexScreen(
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.INDEX) { inclusive = true }
-                    }
-                },
-                onNavigateToUsuario = {
-                    navController.navigate(Routes.navToUsuario())
-                },
-                onNavigateToEmpleado = {
-                    navController.navigate(Routes.navToEmpleado())
-                },
-                onNavigateToCliente = {
-                    navController.navigate(Routes.navToCliente())
-                },
-                onNavigateToProducto = {
-                    navController.navigate(Routes.navToProducto())
-                }
-            )
-        }
-        composable(
-            route = Routes.USUARIO,
-            arguments = listOf(navArgument("page") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadUsuarios") ?: false
-            if (reloadSignal) {
-                backStackEntry.savedStateHandle["reloadUsuarios"] = false
-            }
+        loginGraph(navController)
+        indexGraph(navController)
+        usuarioGraph(navController)
+        empleadoGraph(navController)
+        clienteListaGraph(navController)
+        clienteCrudGraph(navController)
+        productoListaGraph(navController)
+        productoCrudGraph(navController)
+    }
+}
 
-            val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
-            if (operationResult.isNotEmpty()) {
-                backStackEntry.savedStateHandle["operationResult"] = ""
+private fun NavGraphBuilder.loginGraph(navController: NavHostController) {
+    composable(Routes.LOGIN) {
+        LoginScreen(
+            onLoginSuccess = {
+                navController.navigate(Routes.INDEX) {
+                    popUpTo(Routes.LOGIN) { inclusive = true }
+                }
             }
+        )
+    }
+}
 
-            UsuarioScreen(
-                reloadSignal = reloadSignal,
-                operationResult = operationResult,
-                onNavigateBack = { navController.popBackStack() },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                onNavigateToCreate = {
-                    navController.navigate(Routes.USUARIO_CREAR)
-                },
-                onNavigateToEdit = { id, nombre, correo, rowVersion ->
-                    navController.currentBackStackEntry?.savedStateHandle?.apply {
-                        set("edit_nombre", nombre)
-                        set("edit_correo", correo)
-                        set("edit_rowVersion", rowVersion)
-                    }
-                    navController.navigate(Routes.navToActualizar(id))
-                },
-                onNavigateToDelete = { id, nombre, correo, rowVersion ->
-                    navController.currentBackStackEntry?.savedStateHandle?.apply {
-                        set("delete_nombre", nombre)
-                        set("delete_correo", correo)
-                        set("delete_rowVersion", rowVersion)
-                    }
-                    navController.navigate(Routes.navToEliminar(id))
+private fun NavGraphBuilder.indexGraph(navController: NavHostController) {
+    composable(Routes.INDEX) {
+        IndexScreen(
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(Routes.INDEX) { inclusive = true }
                 }
-            )
+            },
+            onNavigateToUsuario = {
+                navController.navigate(Routes.navToUsuario())
+            },
+            onNavigateToEmpleado = {
+                navController.navigate(Routes.navToEmpleado())
+            },
+            onNavigateToCliente = {
+                navController.navigate(Routes.navToCliente())
+            },
+            onNavigateToProducto = {
+                navController.navigate(ProductoRoutes.navToProducto())
+            }
+        )
+    }
+}
+
+private fun NavGraphBuilder.usuarioGraph(navController: NavHostController) {
+    composable(
+        route = Routes.USUARIO,
+        arguments = listOf(navArgument("page") { type = NavType.IntType })
+    ) { backStackEntry ->
+        val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadUsuarios") ?: false
+        if (reloadSignal) {
+            backStackEntry.savedStateHandle["reloadUsuarios"] = false
         }
-        composable(Routes.USUARIO_CREAR) {
-            UsuarioCrearScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onUsuarioCreado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadUsuarios", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
+
+        val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
+        if (operationResult.isNotEmpty()) {
+            backStackEntry.savedStateHandle["operationResult"] = ""
+        }
+
+        UsuarioScreen(
+            reloadSignal = reloadSignal,
+            operationResult = operationResult,
+            onNavigateBack = { navController.popBackStack() },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
                 }
-            )
+            },
+            onNavigateToCreate = {
+                navController.navigate(Routes.USUARIO_CREAR)
+            },
+            onNavigateToEdit = { id, nombre, correo, rowVersion ->
+                navController.currentBackStackEntry?.savedStateHandle?.apply {
+                    set("edit_nombre", nombre)
+                    set("edit_correo", correo)
+                    set("edit_rowVersion", rowVersion)
+                }
+                navController.navigate(Routes.navToActualizar(id))
+            },
+            onNavigateToDelete = { id, nombre, correo, rowVersion ->
+                navController.currentBackStackEntry?.savedStateHandle?.apply {
+                    set("delete_nombre", nombre)
+                    set("delete_correo", correo)
+                    set("delete_rowVersion", rowVersion)
+                }
+                navController.navigate(Routes.navToEliminar(id))
+            }
+        )
+    }
+    composable(Routes.USUARIO_CREAR) {
+        UsuarioCrearScreen(
+            onNavigateBack = { navController.popBackStack() },
+            onUsuarioCreado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadUsuarios", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        )
+    }
+    composable(
+        route = Routes.USUARIO_ACTUALIZAR,
+        arguments = listOf(
+            navArgument("id") { type = NavType.IntType }
+        )
+    ) { backStackEntry ->
+        val id = backStackEntry.arguments?.getInt("id") ?: 0
+        val prevHandle = navController.previousBackStackEntry?.savedStateHandle
+        val nombre = prevHandle?.get<String>("edit_nombre")?.also { prevHandle.remove<String>("edit_nombre") } ?: ""
+        val correo = prevHandle?.get<String>("edit_correo")?.also { prevHandle.remove<String>("edit_correo") } ?: ""
+        val rowVersion = prevHandle?.get<String>("edit_rowVersion")?.also { prevHandle.remove<String>("edit_rowVersion") } ?: ""
+        UsuarioActualizarScreen(
+            id = id,
+            nombre = nombre,
+            correo = correo,
+            rowVersion = rowVersion,
+            onNavigateBack = { navController.popBackStack() },
+            onUsuarioActualizado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadUsuarios", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        )
+    }
+    composable(
+        route = Routes.USUARIO_ELIMINAR,
+        arguments = listOf(
+            navArgument("id") { type = NavType.IntType }
+        )
+    ) { backStackEntry ->
+        val id = backStackEntry.arguments?.getInt("id") ?: 0
+        val prevHandle = navController.previousBackStackEntry?.savedStateHandle
+        val nombre = prevHandle?.get<String>("delete_nombre")?.also { prevHandle.remove<String>("delete_nombre") } ?: ""
+        val correo = prevHandle?.get<String>("delete_correo")?.also { prevHandle.remove<String>("delete_correo") } ?: ""
+        val rowVersion = prevHandle?.get<String>("delete_rowVersion")?.also { prevHandle.remove<String>("delete_rowVersion") } ?: ""
+        UsuarioEliminarScreen(
+            id = id,
+            nombre = nombre,
+            correo = correo,
+            rowVersion = rowVersion,
+            onNavigateBack = { navController.popBackStack() },
+            onUsuarioEliminado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadUsuarios", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        )
+    }
+}
+
+private fun NavGraphBuilder.empleadoGraph(navController: NavHostController) {
+    composable(
+        route = Routes.EMPLEADO,
+        arguments = listOf(navArgument("page") { type = NavType.IntType })
+    ) { backStackEntry ->
+        val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadEmpleados") ?: false
+        if (reloadSignal) {
+            backStackEntry.savedStateHandle["reloadEmpleados"] = false
         }
-        composable(
-            route = Routes.USUARIO_ACTUALIZAR,
-            arguments = listOf(
-                navArgument("id") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id") ?: 0
-            val prevHandle = navController.previousBackStackEntry?.savedStateHandle
-            val nombre = prevHandle?.get<String>("edit_nombre")?.also { prevHandle.remove<String>("edit_nombre") } ?: ""
-            val correo = prevHandle?.get<String>("edit_correo")?.also { prevHandle.remove<String>("edit_correo") } ?: ""
-            val rowVersion = prevHandle?.get<String>("edit_rowVersion")?.also { prevHandle.remove<String>("edit_rowVersion") } ?: ""
-            UsuarioActualizarScreen(
+
+        val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
+        if (operationResult.isNotEmpty()) {
+            backStackEntry.savedStateHandle["operationResult"] = ""
+        }
+
+        EmpleadoScreen(
+            reloadSignal = reloadSignal,
+            operationResult = operationResult,
+            onNavigateBack = { navController.popBackStack() },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            },
+            onNavigateToCreate = {
+                navController.navigate(Routes.EMPLEADO_CREAR)
+            },
+            onNavigateToEdit = { id, rowVersion ->
+                navController.navigate(Routes.navToActualizarEmpleado(id, rowVersion))
+            },
+            onNavigateToDelete = { id, rowVersion ->
+                navController.navigate(Routes.navToEliminarEmpleado(id, rowVersion))
+            }
+        )
+    }
+    composable(Routes.EMPLEADO_CREAR) {
+        EmpleadoCrearScreen(
+            onNavigateBack = { navController.popBackStack() },
+            onEmpleadoCreado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadEmpleados", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        )
+    }
+    composable(
+        route = Routes.EMPLEADO_ACTUALIZAR,
+        arguments = listOf(
+            navArgument("id") { type = NavType.IntType },
+            navArgument("rowVersion") { type = NavType.StringType }
+        )
+    ) { backStackEntry ->
+        val id = backStackEntry.arguments?.getInt("id") ?: 0
+        val rowVersion = backStackEntry.arguments?.getString("rowVersion") ?: ""
+        EmpleadoActualizarScreen(
+            id = id,
+            rowVersion = rowVersion,
+            onNavigateBack = { navController.popBackStack() },
+            onEmpleadoActualizado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadEmpleados", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        )
+    }
+    composable(
+        route = Routes.EMPLEADO_ELIMINAR,
+        arguments = listOf(
+            navArgument("id") { type = NavType.IntType },
+            navArgument("rowVersion") { type = NavType.StringType }
+        )
+    ) { backStackEntry ->
+        val id = backStackEntry.arguments?.getInt("id") ?: 0
+        val rowVersion = backStackEntry.arguments?.getString("rowVersion") ?: ""
+        EmpleadoEliminarScreen(
+            id = id,
+            rowVersion = rowVersion,
+            onNavigateBack = { navController.popBackStack() },
+            onEmpleadoEliminado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadEmpleados", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        )
+    }
+}
+
+private fun NavGraphBuilder.clienteListaGraph(navController: NavHostController) {
+    composable(
+        route = Routes.CLIENTE,
+        arguments = listOf(navArgument("page") { type = NavType.IntType })
+    ) { backStackEntry ->
+        val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadClientes") ?: false
+        if (reloadSignal) {
+            backStackEntry.savedStateHandle["reloadClientes"] = false
+        }
+
+        val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
+        if (operationResult.isNotEmpty()) {
+            backStackEntry.savedStateHandle["operationResult"] = ""
+        }
+
+        ClienteScreen(
+            reloadSignal = reloadSignal,
+            operationResult = operationResult,
+            onNavigateBack = { navController.popBackStack() },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            },
+            onNavigateToCreate = {
+                navController.navigate(Routes.CLIENTE_CREAR)
+            },
+            onNavigateToEdit = { id, nombreCliente, direccionCliente, correo, telefono, rowVersion ->
+                navController.currentBackStackEntry?.savedStateHandle?.apply {
+                    set("edit_nombreCliente", nombreCliente)
+                    set("edit_direccionCliente", direccionCliente)
+                    set("edit_correo", correo)
+                    set("edit_telefono", telefono)
+                    set("edit_rowVersion", rowVersion)
+                }
+                navController.navigate(Routes.navToActualizarCliente(id))
+            },
+            onNavigateToDelete = { id, nombreCliente, direccionCliente, correo, telefono, rowVersion ->
+                navController.currentBackStackEntry?.savedStateHandle?.apply {
+                    set("delete_nombreCliente", nombreCliente)
+                    set("delete_direccionCliente", direccionCliente)
+                    set("delete_correo", correo)
+                    set("delete_telefono", telefono)
+                    set("delete_rowVersion", rowVersion)
+                }
+                navController.navigate(Routes.navToEliminarCliente(id))
+            }
+        )
+    }
+}
+
+private fun NavGraphBuilder.clienteCrudGraph(navController: NavHostController) {
+    composable(Routes.CLIENTE_CREAR) {
+        ClienteCrearScreen(
+            onNavigateBack = { navController.popBackStack() },
+            onClienteCreado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadClientes", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        )
+    }
+    composable(
+        route = Routes.CLIENTE_ACTUALIZAR,
+        arguments = listOf(
+            navArgument("id") { type = NavType.IntType }
+        )
+    ) { backStackEntry ->
+        val id = backStackEntry.arguments?.getInt("id") ?: 0
+        val prevHandle = navController.previousBackStackEntry?.savedStateHandle
+        val nombreCliente = prevHandle?.get<String>("edit_nombreCliente")?.also { prevHandle.remove<String>("edit_nombreCliente") } ?: ""
+        val direccionCliente = prevHandle?.get<String>("edit_direccionCliente")?.also { prevHandle.remove<String>("edit_direccionCliente") }
+        val correo = prevHandle?.get<String>("edit_correo")?.also { prevHandle.remove<String>("edit_correo") } ?: ""
+        val telefono = prevHandle?.get<String>("edit_telefono")?.also { prevHandle.remove<String>("edit_telefono") } ?: ""
+        val rowVersion = prevHandle?.get<String>("edit_rowVersion")?.also { prevHandle.remove<String>("edit_rowVersion") } ?: ""
+        ClienteActualizarScreen(
+            params = ClienteActualizarParams(
                 id = id,
-                nombre = nombre,
+                nombreCliente = nombreCliente,
+                direccionCliente = direccionCliente,
                 correo = correo,
-                rowVersion = rowVersion,
-                onNavigateBack = { navController.popBackStack() },
-                onUsuarioActualizado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadUsuarios", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                telefono = telefono,
+                rowVersion = rowVersion
+            ),
+            onNavigateBack = { navController.popBackStack() },
+            onClienteActualizado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadClientes", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
                 }
-            )
-        }
-        composable(
-            route = Routes.USUARIO_ELIMINAR,
-            arguments = listOf(
-                navArgument("id") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id") ?: 0
-            val prevHandle = navController.previousBackStackEntry?.savedStateHandle
-            val nombre = prevHandle?.get<String>("delete_nombre")?.also { prevHandle.remove<String>("delete_nombre") } ?: ""
-            val correo = prevHandle?.get<String>("delete_correo")?.also { prevHandle.remove<String>("delete_correo") } ?: ""
-            val rowVersion = prevHandle?.get<String>("delete_rowVersion")?.also { prevHandle.remove<String>("delete_rowVersion") } ?: ""
-            UsuarioEliminarScreen(
+            }
+        )
+    }
+    composable(
+        route = Routes.CLIENTE_ELIMINAR,
+        arguments = listOf(
+            navArgument("id") { type = NavType.IntType }
+        )
+    ) { backStackEntry ->
+        val id = backStackEntry.arguments?.getInt("id") ?: 0
+        val prevHandle = navController.previousBackStackEntry?.savedStateHandle
+        val nombreCliente = prevHandle?.get<String>("delete_nombreCliente")?.also { prevHandle.remove<String>("delete_nombreCliente") } ?: ""
+        val direccionCliente = prevHandle?.get<String>("delete_direccionCliente")?.also { prevHandle.remove<String>("delete_direccionCliente") }
+        val correo = prevHandle?.get<String>("delete_correo")?.also { prevHandle.remove<String>("delete_correo") } ?: ""
+        val telefono = prevHandle?.get<String>("delete_telefono")?.also { prevHandle.remove<String>("delete_telefono") } ?: ""
+        val rowVersion = prevHandle?.get<String>("delete_rowVersion")?.also { prevHandle.remove<String>("delete_rowVersion") } ?: ""
+        ClienteEliminarScreen(
+            params = ClienteEliminarParams(
                 id = id,
-                nombre = nombre,
+                nombreCliente = nombreCliente,
+                direccionCliente = direccionCliente,
                 correo = correo,
-                rowVersion = rowVersion,
-                onNavigateBack = { navController.popBackStack() },
-                onUsuarioEliminado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadUsuarios", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                telefono = telefono,
+                rowVersion = rowVersion
+            ),
+            onNavigateBack = { navController.popBackStack() },
+            onClienteEliminado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadClientes", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
                 }
-            )
-        }
-        composable(
-            route = Routes.EMPLEADO,
-            arguments = listOf(navArgument("page") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadEmpleados") ?: false
-            if (reloadSignal) {
-                backStackEntry.savedStateHandle["reloadEmpleados"] = false
             }
+        )
+    }
+}
 
-            val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
-            if (operationResult.isNotEmpty()) {
-                backStackEntry.savedStateHandle["operationResult"] = ""
+private fun NavGraphBuilder.productoListaGraph(navController: NavHostController) {
+    composable(
+        route = Routes.PRODUCTO,
+        arguments = listOf(navArgument("page") { type = NavType.IntType })
+    ) { backStackEntry ->
+        val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadProductos") ?: false
+        if (reloadSignal) {
+            backStackEntry.savedStateHandle["reloadProductos"] = false
+        }
+
+        val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
+        if (operationResult.isNotEmpty()) {
+            backStackEntry.savedStateHandle["operationResult"] = ""
+        }
+
+        ProductoScreen(
+            reloadSignal = reloadSignal,
+            operationResult = operationResult,
+            onNavigateBack = { navController.popBackStack() },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            },
+            onNavigateToCreate = {
+                navController.navigate(Routes.PRODUCTO_CREAR)
+            },
+            onNavigateToEdit = { id, nombreProducto, urlImagen, descripcion, existencia, precio, rowVersion ->
+                navController.currentBackStackEntry?.savedStateHandle?.apply {
+                    set("edit_nombreProducto", nombreProducto)
+                    set("edit_urlImagen", urlImagen)
+                    set("edit_descripcion", descripcion)
+                    set("edit_existencia", existencia)
+                    set("edit_precio", precio)
+                    set("edit_rowVersion", rowVersion)
+                }
+                navController.navigate(ProductoRoutes.navToActualizarProducto(id))
+            },
+            onNavigateToDelete = { id, nombreProducto, urlImagen, descripcion, existencia, precio, rowVersion ->
+                navController.currentBackStackEntry?.savedStateHandle?.apply {
+                    set("delete_nombreProducto", nombreProducto)
+                    set("delete_urlImagen", urlImagen)
+                    set("delete_descripcion", descripcion)
+                    set("delete_existencia", existencia)
+                    set("delete_precio", precio)
+                    set("delete_rowVersion", rowVersion)
+                }
+                navController.navigate(ProductoRoutes.navToEliminarProducto(id))
             }
+        )
+    }
+}
 
-            EmpleadoScreen(
-                reloadSignal = reloadSignal,
-                operationResult = operationResult,
-                onNavigateBack = { navController.popBackStack() },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                onNavigateToCreate = {
-                    navController.navigate(Routes.EMPLEADO_CREAR)
-                },
-                onNavigateToEdit = { id, rowVersion ->
-                    navController.navigate(Routes.navToActualizarEmpleado(id, rowVersion))
-                },
-                onNavigateToDelete = { id, rowVersion ->
-                    navController.navigate(Routes.navToEliminarEmpleado(id, rowVersion))
+private fun NavGraphBuilder.productoCrudGraph(navController: NavHostController) {
+    composable(Routes.PRODUCTO_CREAR) {
+        ProductoCrearScreen(
+            onNavigateBack = { navController.popBackStack() },
+            onProductoCreado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadProductos", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
                 }
-            )
-        }
-        composable(Routes.EMPLEADO_CREAR) {
-            EmpleadoCrearScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onEmpleadoCreado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadEmpleados", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
-        composable(
-            route = Routes.EMPLEADO_ACTUALIZAR,
-            arguments = listOf(
-                navArgument("id") { type = NavType.IntType },
-                navArgument("rowVersion") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id") ?: 0
-            val rowVersion = backStackEntry.arguments?.getString("rowVersion") ?: ""
-            EmpleadoActualizarScreen(
+            }
+        )
+    }
+    composable(
+        route = Routes.PRODUCTO_ACTUALIZAR,
+        arguments = listOf(
+            navArgument("id") { type = NavType.IntType }
+        )
+    ) { backStackEntry ->
+        val id = backStackEntry.arguments?.getInt("id") ?: 0
+        val prevHandle = navController.previousBackStackEntry?.savedStateHandle
+        val nombreProducto = prevHandle?.get<String>("edit_nombreProducto")?.also { prevHandle.remove<String>("edit_nombreProducto") } ?: ""
+        val urlImagen = prevHandle?.get<String>("edit_urlImagen")?.also { prevHandle.remove<String>("edit_urlImagen") }
+        val descripcion = prevHandle?.get<String>("edit_descripcion")?.also { prevHandle.remove<String>("edit_descripcion") }
+        val existencia = prevHandle?.get<Int>("edit_existencia")?.also { prevHandle.remove<Int>("edit_existencia") } ?: 0
+        val precio = prevHandle?.get<Double>("edit_precio")?.also { prevHandle.remove<Double>("edit_precio") } ?: 0.0
+        val rowVersion = prevHandle?.get<String>("edit_rowVersion")?.also { prevHandle.remove<String>("edit_rowVersion") } ?: ""
+        ProductoActualizarScreen(
+            params = ProductoActualizarParams(
                 id = id,
-                rowVersion = rowVersion,
-                onNavigateBack = { navController.popBackStack() },
-                onEmpleadoActualizado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadEmpleados", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                strNombreProducto = nombreProducto,
+                strURLImagen = urlImagen,
+                strDescripcion = descripcion,
+                intNumeroExistencia = existencia,
+                decPrecio = precio,
+                rowVersion = rowVersion
+            ),
+            onNavigateBack = { navController.popBackStack() },
+            onProductoActualizado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadProductos", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
                 }
-            )
-        }
-        composable(
-            route = Routes.EMPLEADO_ELIMINAR,
-            arguments = listOf(
-                navArgument("id") { type = NavType.IntType },
-                navArgument("rowVersion") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id") ?: 0
-            val rowVersion = backStackEntry.arguments?.getString("rowVersion") ?: ""
-            EmpleadoEliminarScreen(
+            }
+        )
+    }
+    composable(
+        route = Routes.PRODUCTO_ELIMINAR,
+        arguments = listOf(
+            navArgument("id") { type = NavType.IntType }
+        )
+    ) { backStackEntry ->
+        val id = backStackEntry.arguments?.getInt("id") ?: 0
+        val prevHandle = navController.previousBackStackEntry?.savedStateHandle
+        val nombreProducto = prevHandle?.get<String>("delete_nombreProducto")?.also { prevHandle.remove<String>("delete_nombreProducto") } ?: ""
+        val urlImagen = prevHandle?.get<String>("delete_urlImagen")?.also { prevHandle.remove<String>("delete_urlImagen") }
+        val descripcion = prevHandle?.get<String>("delete_descripcion")?.also { prevHandle.remove<String>("delete_descripcion") }
+        val existencia = prevHandle?.get<Int>("delete_existencia")?.also { prevHandle.remove<Int>("delete_existencia") } ?: 0
+        val precio = prevHandle?.get<Double>("delete_precio")?.also { prevHandle.remove<Double>("delete_precio") } ?: 0.0
+        val rowVersion = prevHandle?.get<String>("delete_rowVersion")?.also { prevHandle.remove<String>("delete_rowVersion") } ?: ""
+        ProductoEliminarScreen(
+            params = ProductoEliminarParams(
                 id = id,
-                rowVersion = rowVersion,
-                onNavigateBack = { navController.popBackStack() },
-                onEmpleadoEliminado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadEmpleados", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                strNombreProducto = nombreProducto,
+                strURLImagen = urlImagen,
+                strDescripcion = descripcion,
+                intNumeroExistencia = existencia,
+                decPrecio = precio,
+                rowVersion = rowVersion
+            ),
+            onNavigateBack = { navController.popBackStack() },
+            onProductoEliminado = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadProductos", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
                 }
-            )
-        }
-        composable(
-            route = Routes.CLIENTE,
-            arguments = listOf(navArgument("page") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadClientes") ?: false
-            if (reloadSignal) {
-                backStackEntry.savedStateHandle["reloadClientes"] = false
             }
-
-            val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
-            if (operationResult.isNotEmpty()) {
-                backStackEntry.savedStateHandle["operationResult"] = ""
-            }
-
-            ClienteScreen(
-                reloadSignal = reloadSignal,
-                operationResult = operationResult,
-                onNavigateBack = { navController.popBackStack() },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                onNavigateToCreate = {
-                    navController.navigate(Routes.CLIENTE_CREAR)
-                },
-                onNavigateToEdit = { id, nombreCliente, direccionCliente, correo, telefono, rowVersion ->
-                    navController.currentBackStackEntry?.savedStateHandle?.apply {
-                        set("edit_nombreCliente", nombreCliente)
-                        set("edit_direccionCliente", direccionCliente)
-                        set("edit_correo", correo)
-                        set("edit_telefono", telefono)
-                        set("edit_rowVersion", rowVersion)
-                    }
-                    navController.navigate(Routes.navToActualizarCliente(id))
-                },
-                onNavigateToDelete = { id, nombreCliente, direccionCliente, correo, telefono, rowVersion ->
-                    navController.currentBackStackEntry?.savedStateHandle?.apply {
-                        set("delete_nombreCliente", nombreCliente)
-                        set("delete_direccionCliente", direccionCliente)
-                        set("delete_correo", correo)
-                        set("delete_telefono", telefono)
-                        set("delete_rowVersion", rowVersion)
-                    }
-                    navController.navigate(Routes.navToEliminarCliente(id))
-                }
-            )
-        }
-        composable(Routes.CLIENTE_CREAR) {
-            ClienteCrearScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onClienteCreado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadClientes", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
-        composable(
-            route = Routes.CLIENTE_ACTUALIZAR,
-            arguments = listOf(
-                navArgument("id") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id") ?: 0
-            val prevHandle = navController.previousBackStackEntry?.savedStateHandle
-            val nombreCliente = prevHandle?.get<String>("edit_nombreCliente")?.also { prevHandle.remove<String>("edit_nombreCliente") } ?: ""
-            val direccionCliente = prevHandle?.get<String>("edit_direccionCliente")?.also { prevHandle.remove<String>("edit_direccionCliente") }
-            val correo = prevHandle?.get<String>("edit_correo")?.also { prevHandle.remove<String>("edit_correo") } ?: ""
-            val telefono = prevHandle?.get<String>("edit_telefono")?.also { prevHandle.remove<String>("edit_telefono") } ?: ""
-            val rowVersion = prevHandle?.get<String>("edit_rowVersion")?.also { prevHandle.remove<String>("edit_rowVersion") } ?: ""
-            ClienteActualizarScreen(
-                params = ClienteActualizarParams(
-                    id = id,
-                    nombreCliente = nombreCliente,
-                    direccionCliente = direccionCliente,
-                    correo = correo,
-                    telefono = telefono,
-                    rowVersion = rowVersion
-                ),
-                onNavigateBack = { navController.popBackStack() },
-                onClienteActualizado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadClientes", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
-        composable(
-            route = Routes.CLIENTE_ELIMINAR,
-            arguments = listOf(
-                navArgument("id") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id") ?: 0
-            val prevHandle = navController.previousBackStackEntry?.savedStateHandle
-            val nombreCliente = prevHandle?.get<String>("delete_nombreCliente")?.also { prevHandle.remove<String>("delete_nombreCliente") } ?: ""
-            val direccionCliente = prevHandle?.get<String>("delete_direccionCliente")?.also { prevHandle.remove<String>("delete_direccionCliente") }
-            val correo = prevHandle?.get<String>("delete_correo")?.also { prevHandle.remove<String>("delete_correo") } ?: ""
-            val telefono = prevHandle?.get<String>("delete_telefono")?.also { prevHandle.remove<String>("delete_telefono") } ?: ""
-            val rowVersion = prevHandle?.get<String>("delete_rowVersion")?.also { prevHandle.remove<String>("delete_rowVersion") } ?: ""
-            ClienteEliminarScreen(
-                params = ClienteEliminarParams(
-                    id = id,
-                    nombreCliente = nombreCliente,
-                    direccionCliente = direccionCliente,
-                    correo = correo,
-                    telefono = telefono,
-                    rowVersion = rowVersion
-                ),
-                onNavigateBack = { navController.popBackStack() },
-                onClienteEliminado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadClientes", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
-        composable(
-            route = Routes.PRODUCTO,
-            arguments = listOf(navArgument("page") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadProductos") ?: false
-            if (reloadSignal) {
-                backStackEntry.savedStateHandle["reloadProductos"] = false
-            }
-
-            val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
-            if (operationResult.isNotEmpty()) {
-                backStackEntry.savedStateHandle["operationResult"] = ""
-            }
-
-            ProductoScreen(
-                reloadSignal = reloadSignal,
-                operationResult = operationResult,
-                onNavigateBack = { navController.popBackStack() },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                onNavigateToCreate = {
-                    navController.navigate(Routes.PRODUCTO_CREAR)
-                },
-                onNavigateToEdit = { id, nombreProducto, urlImagen, descripcion, existencia, precio, rowVersion ->
-                    navController.currentBackStackEntry?.savedStateHandle?.apply {
-                        set("edit_nombreProducto", nombreProducto)
-                        set("edit_urlImagen", urlImagen)
-                        set("edit_descripcion", descripcion)
-                        set("edit_existencia", existencia)
-                        set("edit_precio", precio)
-                        set("edit_rowVersion", rowVersion)
-                    }
-                    navController.navigate(Routes.navToActualizarProducto(id))
-                },
-                onNavigateToDelete = { id, nombreProducto, urlImagen, descripcion, existencia, precio, rowVersion ->
-                    navController.currentBackStackEntry?.savedStateHandle?.apply {
-                        set("delete_nombreProducto", nombreProducto)
-                        set("delete_urlImagen", urlImagen)
-                        set("delete_descripcion", descripcion)
-                        set("delete_existencia", existencia)
-                        set("delete_precio", precio)
-                        set("delete_rowVersion", rowVersion)
-                    }
-                    navController.navigate(Routes.navToEliminarProducto(id))
-                }
-            )
-        }
-        composable(Routes.PRODUCTO_CREAR) {
-            ProductoCrearScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onProductoCreado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadProductos", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
-        composable(
-            route = Routes.PRODUCTO_ACTUALIZAR,
-            arguments = listOf(
-                navArgument("id") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id") ?: 0
-            val prevHandle = navController.previousBackStackEntry?.savedStateHandle
-            val nombreProducto = prevHandle?.get<String>("edit_nombreProducto")?.also { prevHandle.remove<String>("edit_nombreProducto") } ?: ""
-            val urlImagen = prevHandle?.get<String>("edit_urlImagen")?.also { prevHandle.remove<String>("edit_urlImagen") }
-            val descripcion = prevHandle?.get<String>("edit_descripcion")?.also { prevHandle.remove<String>("edit_descripcion") }
-            val existencia = prevHandle?.get<Int>("edit_existencia")?.also { prevHandle.remove<Int>("edit_existencia") } ?: 0
-            val precio = prevHandle?.get<Double>("edit_precio")?.also { prevHandle.remove<Double>("edit_precio") } ?: 0.0
-            val rowVersion = prevHandle?.get<String>("edit_rowVersion")?.also { prevHandle.remove<String>("edit_rowVersion") } ?: ""
-            ProductoActualizarScreen(
-                params = ProductoActualizarParams(
-                    id = id,
-                    strNombreProducto = nombreProducto,
-                    strURLImagen = urlImagen,
-                    strDescripcion = descripcion,
-                    intNumeroExistencia = existencia,
-                    decPrecio = precio,
-                    rowVersion = rowVersion
-                ),
-                onNavigateBack = { navController.popBackStack() },
-                onProductoActualizado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadProductos", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
-        composable(
-            route = Routes.PRODUCTO_ELIMINAR,
-            arguments = listOf(
-                navArgument("id") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id") ?: 0
-            val prevHandle = navController.previousBackStackEntry?.savedStateHandle
-            val nombreProducto = prevHandle?.get<String>("delete_nombreProducto")?.also { prevHandle.remove<String>("delete_nombreProducto") } ?: ""
-            val urlImagen = prevHandle?.get<String>("delete_urlImagen")?.also { prevHandle.remove<String>("delete_urlImagen") }
-            val descripcion = prevHandle?.get<String>("delete_descripcion")?.also { prevHandle.remove<String>("delete_descripcion") }
-            val existencia = prevHandle?.get<Int>("delete_existencia")?.also { prevHandle.remove<Int>("delete_existencia") } ?: 0
-            val precio = prevHandle?.get<Double>("delete_precio")?.also { prevHandle.remove<Double>("delete_precio") } ?: 0.0
-            val rowVersion = prevHandle?.get<String>("delete_rowVersion")?.also { prevHandle.remove<String>("delete_rowVersion") } ?: ""
-            ProductoEliminarScreen(
-                params = ProductoEliminarParams(
-                    id = id,
-                    strNombreProducto = nombreProducto,
-                    strURLImagen = urlImagen,
-                    strDescripcion = descripcion,
-                    intNumeroExistencia = existencia,
-                    decPrecio = precio,
-                    rowVersion = rowVersion
-                ),
-                onNavigateBack = { navController.popBackStack() },
-                onProductoEliminado = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadProductos", true)
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
-                    navController.popBackStack()
-                },
-                onError = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
-                    navController.popBackStack()
-                },
-                onSessionExpired = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
+        )
     }
 }

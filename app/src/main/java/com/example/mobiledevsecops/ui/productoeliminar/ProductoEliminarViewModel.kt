@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 data class ProductoEliminarUiState(
     val id: Int = 0,
@@ -43,7 +44,7 @@ class ProductoEliminarViewModel(
             urlImagen = params.strURLImagen ?: "",
             descripcion = params.strDescripcion ?: "",
             existencia = params.intNumeroExistencia.toString(),
-            precio = String.format("%.2f", params.decPrecio),
+            precio = String.format(Locale.US, "%.2f", params.decPrecio),
             rowVersion = params.rowVersion
         )
     )

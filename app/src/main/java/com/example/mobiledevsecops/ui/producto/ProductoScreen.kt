@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -535,7 +536,7 @@ private fun ProductoRow(
             overflow = TextOverflow.Ellipsis
         )
         Text(
-            text = "$${String.format("%.2f", producto.decPrecio)}",
+            text = "$${String.format(Locale.US, "%.2f", producto.decPrecio)}",
             modifier = Modifier.weight(0.6f),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
