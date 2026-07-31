@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -63,6 +64,32 @@ class ProductoEliminarViewModelTest {
         assertEquals(false, viewModel.uiState.value.isLoading)
         assertTrue(events.any { it is ProductoEliminarEvent.ProductoEliminado })
         job.cancel()
+    }
+
+    @Test
+    fun `onEliminarClicked con rowVersion invalido muestra error y no emite eventos`() {
+        val viewModelSinVersion = ProductoEliminarViewModel(
+            EliminarProductoUseCase(fakeRepo),
+            params.copy(rowVersion = "")
+        )
+
+        viewModelSinVersion.onEliminarClicked()
+
+        assertNotNull(viewModelSinVersion.uiState.value.rowVersionError)
+        assertEquals(false, viewModelSinVersion.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `onEliminarClicked con id invalido muestra error`() {
+        val viewModelSinId = ProductoEliminarViewModel(
+            EliminarProductoUseCase(fakeRepo),
+            params.copy(id = 0)
+        )
+
+        viewModelSinId.onEliminarClicked()
+
+        assertNotNull(viewModelSinId.uiState.value.idError)
+        assertEquals(false, viewModelSinId.uiState.value.isLoading)
     }
 
     @Test

@@ -14,7 +14,10 @@ import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import java.io.IOException
 
 class ProductoApi(
     private val httpClient: HttpClient
@@ -24,7 +27,7 @@ class ProductoApi(
             parameter("PageNumber", page)
             parameter("PageSize", pageSize)
         }
-        if (response.status.value == HTTP_UNAUTHORIZED) throw SessionExpiredException()
+        throwIfNotSuccess(response.status)
         return response.body()
     }
 
@@ -34,7 +37,7 @@ class ProductoApi(
             parameter("PageNumber", page)
             parameter("PageSize", pageSize)
         }
-        if (response.status.value == HTTP_UNAUTHORIZED) throw SessionExpiredException()
+        throwIfNotSuccess(response.status)
         return response.body()
     }
 
@@ -43,10 +46,7 @@ class ProductoApi(
             contentType(ContentType.Application.Json)
             setBody(request)
         }
-        when (response.status.value) {
-            HTTP_UNAUTHORIZED -> throw SessionExpiredException()
-            HTTP_CONFLICT -> throw ConflictException()
-        }
+        throwIfNotSuccess(response.status)
     }
 
     suspend fun actualizarProducto(request: ProductUpdateRequest) {
@@ -54,10 +54,7 @@ class ProductoApi(
             contentType(ContentType.Application.Json)
             setBody(request)
         }
-        when (response.status.value) {
-            HTTP_UNAUTHORIZED -> throw SessionExpiredException()
-            HTTP_CONFLICT -> throw ConflictException()
-        }
+        throwIfNotSuccess(response.status)
     }
 
     suspend fun eliminarProducto(request: ProductDeleteRequest) {
@@ -65,9 +62,15 @@ class ProductoApi(
             contentType(ContentType.Application.Json)
             setBody(request)
         }
-        when (response.status.value) {
+        throwIfNotSuccess(response.status)
+    }
+
+    private fun throwIfNotSuccess(status: HttpStatusCode) {
+        if (status.isSuccess()) return
+        when (status.value) {
             HTTP_UNAUTHORIZED -> throw SessionExpiredException()
             HTTP_CONFLICT -> throw ConflictException()
+            else -> throw IOException("Error HTTP ${status.value}")
         }
     }
 

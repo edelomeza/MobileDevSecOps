@@ -24,7 +24,7 @@ class FakeProductoRepository : ProductoRepository {
         _productos.clear()
         _productos.addAll(productos)
         totalCount = productos.size
-        totalPages = maxOf(1, (productos.size + 9) / 10)
+        totalPages = maxOf(1, (productos.size + 7) / 8)
     }
 
     override suspend fun getProductos(page: Int, pageSize: Int): ProductoPage {
@@ -35,6 +35,7 @@ class FakeProductoRepository : ProductoRepository {
         val start = (page - 1) * pageSize
         val end = minOf(start + pageSize, _productos.size)
         val items = if (start < _productos.size) _productos.subList(start, end) else emptyList()
+        totalPages = maxOf(1, (totalCount + pageSize - 1) / pageSize)
 
         return ProductoPage(
             items = items,

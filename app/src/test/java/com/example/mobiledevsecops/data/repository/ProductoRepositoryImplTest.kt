@@ -270,4 +270,92 @@ class ProductoRepositoryImplTest {
             assertTrue(true)
         }
     }
+
+    @Test
+    fun `crearProducto con 500 lanza excepcion`() = runTest {
+        val engine = MockEngine { _ ->
+            respond(
+                content = "",
+                status = HttpStatusCode.InternalServerError
+            )
+        }
+        val httpClient = HttpClient(engine) {
+            install(ContentNegotiation) { json(json) }
+        }
+        val api = ProductoApi(httpClient)
+        val repo = ProductoRepositoryImpl(api)
+
+        try {
+            repo.crearProducto("Nuevo Producto", null, null, 10, 100.00)
+            assertTrue(false)
+        } catch (e: Exception) {
+            assertTrue(true)
+        }
+    }
+
+    @Test
+    fun `crearProducto con 400 lanza excepcion`() = runTest {
+        val engine = MockEngine { _ ->
+            respond(
+                content = "",
+                status = HttpStatusCode.BadRequest
+            )
+        }
+        val httpClient = HttpClient(engine) {
+            install(ContentNegotiation) { json(json) }
+        }
+        val api = ProductoApi(httpClient)
+        val repo = ProductoRepositoryImpl(api)
+
+        try {
+            repo.crearProducto("Nuevo Producto", null, null, 10, 100.00)
+            assertTrue(false)
+        } catch (e: Exception) {
+            assertTrue(true)
+        }
+    }
+
+    @Test
+    fun `actualizarProducto con 404 lanza excepcion`() = runTest {
+        val engine = MockEngine { _ ->
+            respond(
+                content = "",
+                status = HttpStatusCode.NotFound
+            )
+        }
+        val httpClient = HttpClient(engine) {
+            install(ContentNegotiation) { json(json) }
+        }
+        val api = ProductoApi(httpClient)
+        val repo = ProductoRepositoryImpl(api)
+
+        try {
+            repo.actualizarProducto(99, "Test", null, null, 10, 100.00, "AAAAAAAAB9E=")
+            assertTrue(false)
+        } catch (e: Exception) {
+            assertTrue(true)
+        }
+    }
+
+    @Test
+    fun `eliminarProducto con 404 lanza excepcion`() = runTest {
+        val engine = MockEngine { _ ->
+            respond(
+                content = "",
+                status = HttpStatusCode.NotFound
+            )
+        }
+        val httpClient = HttpClient(engine) {
+            install(ContentNegotiation) { json(json) }
+        }
+        val api = ProductoApi(httpClient)
+        val repo = ProductoRepositoryImpl(api)
+
+        try {
+            repo.eliminarProducto(99, "AAAAAAAAB9E=")
+            assertTrue(false)
+        } catch (e: Exception) {
+            assertTrue(true)
+        }
+    }
 }

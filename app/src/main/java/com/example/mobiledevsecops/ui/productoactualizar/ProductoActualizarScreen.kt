@@ -165,6 +165,15 @@ fun ProductoActualizarScreen(
                     Text("Actualizar")
                 }
             }
+            uiState.rowVersionError?.let { error ->
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

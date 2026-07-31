@@ -49,7 +49,7 @@ class ProductoActualizarViewModelTest {
         assertEquals("https://example.com/laptop.jpg", state.urlImagen)
         assertEquals("Laptop 15.6 pulgadas", state.descripcion)
         assertEquals("10", state.existencia)
-        assertEquals("12500.0", state.precio)
+        assertEquals("12500.00", state.precio)
         assertEquals(false, state.isLoading)
         assertNull(state.nombreProductoError)
         assertNull(state.error)
@@ -92,6 +92,35 @@ class ProductoActualizarViewModelTest {
 
         assertNotNull(viewModel.uiState.value.nombreProductoError)
         assertEquals(false, viewModel.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `onActualizarClicked con rowVersion vacio muestra error de version`() {
+        val viewModelSinVersion = ProductoActualizarViewModel(
+            ActualizarProductoUseCase(fakeRepo),
+            params.copy(rowVersion = "")
+        )
+        viewModelSinVersion.onActualizarClicked()
+
+        assertNotNull(viewModelSinVersion.uiState.value.rowVersionError)
+        assertEquals(false, viewModelSinVersion.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `onActualizarClicked con existencia no numerica muestra error de formato`() {
+        viewModel.onExistenciaChanged("abc")
+        viewModel.onActualizarClicked()
+
+        assertEquals("Ingrese un número entero válido", viewModel.uiState.value.existenciaError)
+        assertNull(viewModel.uiState.value.precioError)
+    }
+
+    @Test
+    fun `onActualizarClicked con precio vacio muestra error obligatorio`() {
+        viewModel.onPrecioChanged("")
+        viewModel.onActualizarClicked()
+
+        assertEquals("El precio es obligatorio", viewModel.uiState.value.precioError)
     }
 
     @Test

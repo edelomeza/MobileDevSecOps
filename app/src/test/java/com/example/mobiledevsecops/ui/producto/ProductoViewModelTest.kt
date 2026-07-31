@@ -46,6 +46,18 @@ class ProductoViewModelTest {
     }
 
     @Test
+    fun `loadPage pagina 2 muestra todos los items restantes`() {
+        viewModel.loadPage(2)
+        coroutineRule.testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(2, state.currentPage)
+        assertEquals(7, state.productos.size)
+        assertEquals("Producto 9", state.productos.first().strNombreProducto)
+        assertEquals("Producto 15", state.productos.last().strNombreProducto)
+    }
+
+    @Test
     fun `goToNextPage carga pagina siguiente`() {
         viewModel.goToNextPage()
         coroutineRule.testDispatcher.scheduler.advanceUntilIdle()

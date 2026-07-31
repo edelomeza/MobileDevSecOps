@@ -140,6 +140,45 @@ class ProductoCrearViewModelTest {
     }
 
     @Test
+    fun `onGuardarClicked con existencia no numerica muestra error de formato`() {
+        viewModel.onNombreProductoChanged("Producto")
+        viewModel.onExistenciaChanged("abc")
+        viewModel.onPrecioChanged("100.00")
+        viewModel.onGuardarClicked()
+
+        assertEquals("Ingrese un número entero válido", viewModel.uiState.value.existenciaError)
+        assertNull(viewModel.uiState.value.precioError)
+    }
+
+    @Test
+    fun `onGuardarClicked con precio vacio muestra error obligatorio`() {
+        viewModel.onNombreProductoChanged("Producto")
+        viewModel.onExistenciaChanged("10")
+        viewModel.onGuardarClicked()
+
+        assertEquals("El precio es obligatorio", viewModel.uiState.value.precioError)
+    }
+
+    @Test
+    fun `onGuardarClicked con precio con coma decimal muestra error de formato`() {
+        viewModel.onNombreProductoChanged("Producto")
+        viewModel.onExistenciaChanged("10")
+        viewModel.onPrecioChanged("12,50")
+        viewModel.onGuardarClicked()
+
+        assertEquals("Ingrese un precio válido", viewModel.uiState.value.precioError)
+    }
+
+    @Test
+    fun `onGuardarClicked con existencia vacia muestra error obligatorio`() {
+        viewModel.onNombreProductoChanged("Producto")
+        viewModel.onPrecioChanged("100.00")
+        viewModel.onGuardarClicked()
+
+        assertEquals("La existencia es obligatoria", viewModel.uiState.value.existenciaError)
+    }
+
+    @Test
     fun `onGuardarClicked con error del servidor emite Error`() = runTest {
         fakeRepo.shouldThrowException = true
         viewModel.onNombreProductoChanged("Producto")

@@ -66,15 +66,37 @@ class ProductoCrearViewModel(
 
     fun onGuardarClicked() {
         val state = _uiState.value
-        val existencia = state.existencia.toIntOrNull() ?: -1
-        val precio = state.precio.toDoubleOrNull() ?: -1.0
+        val existenciaStr = state.existencia.trim()
+        val precioStr = state.precio.trim()
+        val existencia = existenciaStr.toIntOrNull()
+        val precio = precioStr.toDoubleOrNull()
+
+        val parseErrors = mutableMapOf<String, String>()
+        if (existenciaStr.isEmpty()) {
+            parseErrors["intNumeroExistencia"] = "La existencia es obligatoria"
+        } else if (existencia == null) {
+            parseErrors["intNumeroExistencia"] = "Ingrese un número entero válido"
+        }
+        if (precioStr.isEmpty()) {
+            parseErrors["decPrecio"] = "El precio es obligatorio"
+        } else if (precio == null) {
+            parseErrors["decPrecio"] = "Ingrese un precio válido"
+        }
+
+        if (parseErrors.isNotEmpty()) {
+            _uiState.value = _uiState.value.copy(
+                existenciaError = parseErrors["intNumeroExistencia"],
+                precioError = parseErrors["decPrecio"]
+            )
+            return
+        }
 
         val validationErrors = crearProductoUseCase.validar(
             state.nombreProducto,
             state.urlImagen.takeIf { it.isNotBlank() },
             state.descripcion.takeIf { it.isNotBlank() },
-            existencia,
-            precio
+            existencia ?: -1,
+            precio ?: -1.0
         )
 
         if (validationErrors.isNotEmpty()) {
@@ -95,8 +117,8 @@ class ProductoCrearViewModel(
                 state.nombreProducto,
                 state.urlImagen.takeIf { it.isNotBlank() },
                 state.descripcion.takeIf { it.isNotBlank() },
-                existencia,
-                precio
+                existencia ?: -1,
+                precio ?: -1.0
             )) {
                 is CrearProductoResult.Success -> {
                     _uiState.value = _uiState.value.copy(isLoading = false)

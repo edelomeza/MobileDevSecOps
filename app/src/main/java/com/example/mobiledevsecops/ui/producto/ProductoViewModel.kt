@@ -2,7 +2,6 @@ package com.example.mobiledevsecops.ui.producto
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mobiledevsecops.data.remote.ProductoApi
 import com.example.mobiledevsecops.data.remote.SessionExpiredException
 import com.example.mobiledevsecops.domain.model.Producto
 import com.example.mobiledevsecops.domain.repository.ProductoRepository
@@ -55,9 +54,8 @@ class ProductoViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
                 val result = productoRepository.getProductos(page)
-                val items = result.items.take(ProductoApi.PAGE_SIZE)
                 _uiState.value = _uiState.value.copy(
-                    productos = items,
+                    productos = result.items,
                     isLoading = false,
                     error = null,
                     currentPage = result.pageNumber,
@@ -88,9 +86,8 @@ class ProductoViewModel(
             _uiState.value = _uiState.value.copy(isSearching = true, error = null)
             when (val result = buscarProductosUseCase(texto, 1)) {
                 is BuscarProductosResult.Success -> {
-                    val items = result.page.items.take(ProductoApi.PAGE_SIZE)
                     _uiState.value = _uiState.value.copy(
-                        productos = items,
+                        productos = result.page.items,
                         isSearching = false,
                         isSearchActive = true,
                         currentPage = result.page.pageNumber,
@@ -147,9 +144,8 @@ class ProductoViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             when (val result = buscarProductosUseCase(texto, page)) {
                 is BuscarProductosResult.Success -> {
-                    val items = result.page.items.take(ProductoApi.PAGE_SIZE)
                     _uiState.value = _uiState.value.copy(
-                        productos = items,
+                        productos = result.page.items,
                         isLoading = false,
                         currentPage = result.page.pageNumber,
                         totalPages = result.page.totalPages,

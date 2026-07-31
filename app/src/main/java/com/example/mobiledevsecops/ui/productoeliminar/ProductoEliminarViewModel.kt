@@ -22,7 +22,9 @@ data class ProductoEliminarUiState(
     val precio: String = "",
     val rowVersion: String = "",
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val idError: String? = null,
+    val rowVersionError: String? = null
 )
 
 sealed class ProductoEliminarEvent {
@@ -58,9 +60,10 @@ class ProductoEliminarViewModel(
         val validationErrors = eliminarProductoUseCase.validar(state.id, state.rowVersion)
 
         if (validationErrors.isNotEmpty()) {
-            viewModelScope.launch {
-                _events.emit(ProductoEliminarEvent.Error)
-            }
+            _uiState.value = _uiState.value.copy(
+                idError = validationErrors["id"],
+                rowVersionError = validationErrors["rowVersion"]
+            )
             return
         }
 
@@ -73,8 +76,11 @@ class ProductoEliminarViewModel(
                     _events.emit(ProductoEliminarEvent.ProductoEliminado)
                 }
                 is EliminarProductoResult.ValidationError -> {
-                    _uiState.value = _uiState.value.copy(isLoading = false)
-                    _events.emit(ProductoEliminarEvent.Error)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        idError = result.errores["id"],
+                        rowVersionError = result.errores["rowVersion"]
+                    )
                 }
                 is EliminarProductoResult.Error -> {
                     _uiState.value = _uiState.value.copy(isLoading = false, error = result.mensaje)

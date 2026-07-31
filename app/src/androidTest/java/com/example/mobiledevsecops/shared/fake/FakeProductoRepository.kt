@@ -22,7 +22,7 @@ class FakeProductoRepository : ProductoRepository {
         _productos.clear()
         _productos.addAll(productos)
         totalCount = productos.size
-        totalPages = maxOf(1, (productos.size + 9) / 10)
+        totalPages = maxOf(1, (productos.size + 7) / 8)
     }
 
     override suspend fun getProductos(page: Int, pageSize: Int): ProductoPage {
@@ -31,6 +31,7 @@ class FakeProductoRepository : ProductoRepository {
         val start = (page - 1) * pageSize
         val end = minOf(start + pageSize, _productos.size)
         val items = if (start < _productos.size) _productos.subList(start, end) else emptyList()
+        totalPages = maxOf(1, (totalCount + pageSize - 1) / pageSize)
         return ProductoPage(items, totalCount, page, totalPages)
     }
 
@@ -58,7 +59,15 @@ class FakeProductoRepository : ProductoRepository {
         if (shouldThrowConflict) throw ConflictException()
         if (shouldThrowException) throw Exception("Error")
         val index = _productos.indexOfFirst { it.id == id }
-        if (index != -1) _productos[index] = _productos[index].copy(strNombreProducto = nombre)
+        if (index != -1) {
+            _productos[index] = _productos[index].copy(
+                strNombreProducto = nombre,
+                strURLImagen = url,
+                strDescripcion = desc,
+                intNumeroExistencia = existencia,
+                decPrecio = precio
+            )
+        }
     }
 
     override suspend fun eliminarProducto(id: Int, rowVersion: String) {

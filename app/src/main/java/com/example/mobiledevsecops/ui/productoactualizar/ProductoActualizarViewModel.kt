@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 data class ProductoActualizarUiState(
     val id: Int = 0,
@@ -25,6 +26,7 @@ data class ProductoActualizarUiState(
     val descripcionError: String? = null,
     val existenciaError: String? = null,
     val precioError: String? = null,
+    val rowVersionError: String? = null,
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -48,7 +50,7 @@ class ProductoActualizarViewModel(
             urlImagen = params.strURLImagen ?: "",
             descripcion = params.strDescripcion ?: "",
             existencia = params.intNumeroExistencia.toString(),
-            precio = params.decPrecio.toString(),
+            precio = String.format(Locale.US, "%.2f", params.decPrecio),
             rowVersion = params.rowVersion
         )
     )
@@ -79,16 +81,38 @@ class ProductoActualizarViewModel(
 
     fun onActualizarClicked() {
         val state = _uiState.value
-        val existencia = state.existencia.toIntOrNull() ?: -1
-        val precio = state.precio.toDoubleOrNull() ?: -1.0
+        val existenciaStr = state.existencia.trim()
+        val precioStr = state.precio.trim()
+        val existencia = existenciaStr.toIntOrNull()
+        val precio = precioStr.toDoubleOrNull()
+
+        val parseErrors = mutableMapOf<String, String>()
+        if (existenciaStr.isEmpty()) {
+            parseErrors["intNumeroExistencia"] = "La existencia es obligatoria"
+        } else if (existencia == null) {
+            parseErrors["intNumeroExistencia"] = "Ingrese un número entero válido"
+        }
+        if (precioStr.isEmpty()) {
+            parseErrors["decPrecio"] = "El precio es obligatorio"
+        } else if (precio == null) {
+            parseErrors["decPrecio"] = "Ingrese un precio válido"
+        }
+
+        if (parseErrors.isNotEmpty()) {
+            _uiState.value = _uiState.value.copy(
+                existenciaError = parseErrors["intNumeroExistencia"],
+                precioError = parseErrors["decPrecio"]
+            )
+            return
+        }
 
         val validationErrors = actualizarProductoUseCase.validar(
             state.id,
             state.nombreProducto,
             state.urlImagen.takeIf { it.isNotBlank() },
             state.descripcion.takeIf { it.isNotBlank() },
-            existencia,
-            precio,
+            existencia ?: -1,
+            precio ?: -1.0,
             state.rowVersion
         )
 
@@ -98,7 +122,8 @@ class ProductoActualizarViewModel(
                 urlImagenError = validationErrors["strURLImagen"],
                 descripcionError = validationErrors["strDescripcion"],
                 existenciaError = validationErrors["intNumeroExistencia"],
-                precioError = validationErrors["decPrecio"]
+                precioError = validationErrors["decPrecio"],
+                rowVersionError = validationErrors["rowVersion"]
             )
             return
         }
@@ -111,8 +136,8 @@ class ProductoActualizarViewModel(
                 state.nombreProducto,
                 state.urlImagen.takeIf { it.isNotBlank() },
                 state.descripcion.takeIf { it.isNotBlank() },
-                existencia,
-                precio,
+                existencia ?: -1,
+                precio ?: -1.0,
                 state.rowVersion
             )) {
                 is ActualizarProductoResult.Success -> {
@@ -126,7 +151,8 @@ class ProductoActualizarViewModel(
                         urlImagenError = result.errores["strURLImagen"],
                         descripcionError = result.errores["strDescripcion"],
                         existenciaError = result.errores["intNumeroExistencia"],
-                        precioError = result.errores["decPrecio"]
+                        precioError = result.errores["decPrecio"],
+                        rowVersionError = result.errores["rowVersion"]
                     )
                 }
                 is ActualizarProductoResult.Error -> {

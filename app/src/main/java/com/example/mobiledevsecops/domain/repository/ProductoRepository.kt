@@ -3,8 +3,8 @@ package com.example.mobiledevsecops.domain.repository
 import com.example.mobiledevsecops.domain.model.ProductoPage
 
 interface ProductoRepository {
-    suspend fun getProductos(page: Int, pageSize: Int = 10): ProductoPage
-    suspend fun buscarProductos(texto: String, page: Int, pageSize: Int = 10): ProductoPage
+    suspend fun getProductos(page: Int, pageSize: Int = 8): ProductoPage
+    suspend fun buscarProductos(texto: String, page: Int, pageSize: Int = 8): ProductoPage
     suspend fun crearProducto(
         strNombreProducto: String,
         strURLImagen: String?,
