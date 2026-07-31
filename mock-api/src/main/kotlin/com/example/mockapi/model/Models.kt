@@ -127,3 +127,50 @@ data class EmpCatTipoEmpleadoListResponse(
     @SerialName("PageSize") val pageSize: Int,
     @SerialName("TotalPages") val totalPages: Int
 )
+
+@Serializable
+data class ProductoDto(
+    val id: Int,
+    val strNombreProducto: String,
+    val strURLImagen: String? = null,
+    val strDescripcion: String? = null,
+    val intNumeroExistencia: Int,
+    val decPrecio: Double,
+    @SerialName("RowVersion")
+    val rowVersion: String? = null
+)
+
+@Serializable
+data class ProductoListResponse(
+    @SerialName("Items") val items: List<ProductoDto>,
+    @SerialName("TotalCount") val totalCount: Int,
+    @SerialName("PageNumber") val pageNumber: Int,
+    @SerialName("PageSize") val pageSize: Int,
+    @SerialName("TotalPages") val totalPages: Int
+)
+
+@Serializable
+data class ProductCreateRequest(
+    val strNombreProducto: String,
+    val strURLImagen: String? = null,
+    val strDescripcion: String? = null,
+    val intNumeroExistencia: Int,
+    val decPrecio: Double
+)
+
+@Serializable
+data class ProductUpdateRequest(
+    val id: Int,
+    val strNombreProducto: String,
+    val strURLImagen: String? = null,
+    val strDescripcion: String? = null,
+    val intNumeroExistencia: Int,
+    val decPrecio: Double,
+    val rowVersion: String
+)
+
+@Serializable
+data class ProductDeleteRequest(
+    val id: Int,
+    val rowVersion: String
+)

@@ -1,6 +1,7 @@
 package com.example.mockapi
 
 import com.example.mockapi.data.EmpleadoDatabase
+import com.example.mockapi.data.ProductoDatabase
 import com.example.mockapi.data.TipoEmpleadoDatabase
 import com.example.mockapi.data.UsuarioDatabase
 import com.example.mockapi.plugins.configureRouting
@@ -12,9 +13,10 @@ fun main() {
     val usuarioDatabase = UsuarioDatabase()
     val empleadoDatabase = EmpleadoDatabase()
     val tipoEmpleadoDatabase = TipoEmpleadoDatabase()
+    val productoDatabase = ProductoDatabase()
 
     embeddedServer(Netty, port = 8080) {
         configureSerialization()
-        configureRouting(usuarioDatabase, empleadoDatabase, tipoEmpleadoDatabase)
+        configureRouting(usuarioDatabase, empleadoDatabase, tipoEmpleadoDatabase, productoDatabase)
     }.start(wait = true)
 }

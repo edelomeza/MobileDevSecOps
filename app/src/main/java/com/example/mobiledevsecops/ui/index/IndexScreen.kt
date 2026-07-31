@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -49,6 +50,7 @@ fun IndexScreen(
     onNavigateToUsuario: () -> Unit,
     onNavigateToEmpleado: () -> Unit,
     onNavigateToCliente: () -> Unit,
+    onNavigateToProducto: () -> Unit,
     viewModel: IndexViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -62,6 +64,7 @@ fun IndexScreen(
                 is IndexEvent.NavigateToUsuario -> onNavigateToUsuario()
                 is IndexEvent.NavigateToEmpleado -> onNavigateToEmpleado()
                 is IndexEvent.NavigateToCliente -> onNavigateToCliente()
+                is IndexEvent.NavigateToProducto -> onNavigateToProducto()
             }
         }
     }
@@ -122,6 +125,16 @@ fun IndexScreen(
                     onClick = {
                         scope.launch { drawerState.close() }
                         viewModel.onNavigateToCliente()
+                    }
+                )
+
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Default.ShoppingCart, contentDescription = null) },
+                    label = { Text("Producto") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        viewModel.onNavigateToProducto()
                     }
                 )
 

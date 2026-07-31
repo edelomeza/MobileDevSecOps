@@ -46,13 +46,13 @@ complexity:
 exceptions:
   TooGenericExceptionCaught:
     active: true
-    excludes: ['**/useCase/**', '**/test/**', '**/androidTest/**', '**/ui/**', '**/data/**']
+    excludes: ['**/usecase/**', '**/test/**', '**/androidTest/**', '**/ui/**', '**/data/**']
   TooGenericExceptionThrown:
     active: true
     excludes: ['**/test/**', '**/androidTest/**']
   SwallowedException:
     active: true
-    excludes: ['**/useCase/**', '**/test/**', '**/androidTest/**', '**/ui/**', '**/data/**']
+    excludes: ['**/usecase/**', '**/test/**', '**/androidTest/**', '**/ui/**', '**/data/**']
 
 potential-bugs:
   LateinitUsage:
