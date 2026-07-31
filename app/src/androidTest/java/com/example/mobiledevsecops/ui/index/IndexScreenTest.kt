@@ -33,6 +33,7 @@ class IndexScreenTest {
                 onNavigateToUsuario = { },
                 onNavigateToEmpleado = { },
                 onNavigateToCliente = { },
+                onNavigateToProducto = { },
                 viewModel = viewModel
             )
         }
@@ -50,6 +51,7 @@ class IndexScreenTest {
                 onNavigateToUsuario = { },
                 onNavigateToEmpleado = { },
                 onNavigateToCliente = { },
+                onNavigateToProducto = { },
                 viewModel = viewModel
             )
         }
@@ -61,6 +63,7 @@ class IndexScreenTest {
         composeTestRule.onNodeWithText("Usuario").assertIsDisplayed()
         composeTestRule.onNodeWithText("Empleado").assertIsDisplayed()
         composeTestRule.onNodeWithText("Cliente").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Producto").assertIsDisplayed()
         composeTestRule.onNodeWithText("Cerrar").assertIsDisplayed()
     }
 }

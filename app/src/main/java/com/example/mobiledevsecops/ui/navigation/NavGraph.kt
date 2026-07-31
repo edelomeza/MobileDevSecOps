@@ -18,6 +18,12 @@ import com.example.mobiledevsecops.ui.empleadocrear.EmpleadoCrearScreen
 import com.example.mobiledevsecops.ui.empleadoeliminar.EmpleadoEliminarScreen
 import com.example.mobiledevsecops.ui.index.IndexScreen
 import com.example.mobiledevsecops.ui.login.LoginScreen
+import com.example.mobiledevsecops.ui.producto.ProductoScreen
+import com.example.mobiledevsecops.ui.productoactualizar.ProductoActualizarParams
+import com.example.mobiledevsecops.ui.productoactualizar.ProductoActualizarScreen
+import com.example.mobiledevsecops.ui.productocrear.ProductoCrearScreen
+import com.example.mobiledevsecops.ui.productoeliminar.ProductoEliminarParams
+import com.example.mobiledevsecops.ui.productoeliminar.ProductoEliminarScreen
 import com.example.mobiledevsecops.ui.usuario.UsuarioScreen
 import com.example.mobiledevsecops.ui.usuarioactualizar.UsuarioActualizarScreen
 import com.example.mobiledevsecops.ui.usuariocrear.UsuarioCrearScreen
@@ -38,6 +44,10 @@ object Routes {
     const val CLIENTE_CREAR = "cliente/crear"
     const val CLIENTE_ACTUALIZAR = "cliente/actualizar/{id}"
     const val CLIENTE_ELIMINAR = "cliente/eliminar/{id}"
+    const val PRODUCTO = "producto/{page}"
+    const val PRODUCTO_CREAR = "producto/crear"
+    const val PRODUCTO_ACTUALIZAR = "producto/actualizar/{id}"
+    const val PRODUCTO_ELIMINAR = "producto/eliminar/{id}"
 
     fun navToUsuario(page: Int = 1) = "usuario/$page"
     fun navToActualizar(id: Int) = "usuario/actualizar/$id"
@@ -48,6 +58,9 @@ object Routes {
     fun navToCliente(page: Int = 1) = "cliente/$page"
     fun navToActualizarCliente(id: Int) = "cliente/actualizar/$id"
     fun navToEliminarCliente(id: Int) = "cliente/eliminar/$id"
+    fun navToProducto(page: Int = 1) = "producto/$page"
+    fun navToActualizarProducto(id: Int) = "producto/actualizar/$id"
+    fun navToEliminarProducto(id: Int) = "producto/eliminar/$id"
 }
 
 @Composable
@@ -80,6 +93,9 @@ fun AppNavGraph(navController: NavHostController) {
                 },
                 onNavigateToCliente = {
                     navController.navigate(Routes.navToCliente())
+                },
+                onNavigateToProducto = {
+                    navController.navigate(Routes.navToProducto())
                 }
             )
         }
@@ -454,6 +470,157 @@ fun AppNavGraph(navController: NavHostController) {
                 onNavigateBack = { navController.popBackStack() },
                 onClienteEliminado = {
                     navController.previousBackStackEntry?.savedStateHandle?.set("reloadClientes", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                    navController.popBackStack()
+                },
+                onError = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(
+            route = Routes.PRODUCTO,
+            arguments = listOf(navArgument("page") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadProductos") ?: false
+            if (reloadSignal) {
+                backStackEntry.savedStateHandle["reloadProductos"] = false
+            }
+
+            val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
+            if (operationResult.isNotEmpty()) {
+                backStackEntry.savedStateHandle["operationResult"] = ""
+            }
+
+            ProductoScreen(
+                reloadSignal = reloadSignal,
+                operationResult = operationResult,
+                onNavigateBack = { navController.popBackStack() },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onNavigateToCreate = {
+                    navController.navigate(Routes.PRODUCTO_CREAR)
+                },
+                onNavigateToEdit = { id, nombreProducto, urlImagen, descripcion, existencia, precio, rowVersion ->
+                    navController.currentBackStackEntry?.savedStateHandle?.apply {
+                        set("edit_nombreProducto", nombreProducto)
+                        set("edit_urlImagen", urlImagen)
+                        set("edit_descripcion", descripcion)
+                        set("edit_existencia", existencia)
+                        set("edit_precio", precio)
+                        set("edit_rowVersion", rowVersion)
+                    }
+                    navController.navigate(Routes.navToActualizarProducto(id))
+                },
+                onNavigateToDelete = { id, nombreProducto, urlImagen, descripcion, existencia, precio, rowVersion ->
+                    navController.currentBackStackEntry?.savedStateHandle?.apply {
+                        set("delete_nombreProducto", nombreProducto)
+                        set("delete_urlImagen", urlImagen)
+                        set("delete_descripcion", descripcion)
+                        set("delete_existencia", existencia)
+                        set("delete_precio", precio)
+                        set("delete_rowVersion", rowVersion)
+                    }
+                    navController.navigate(Routes.navToEliminarProducto(id))
+                }
+            )
+        }
+        composable(Routes.PRODUCTO_CREAR) {
+            ProductoCrearScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onProductoCreado = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadProductos", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                    navController.popBackStack()
+                },
+                onError = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(
+            route = Routes.PRODUCTO_ACTUALIZAR,
+            arguments = listOf(
+                navArgument("id") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            val prevHandle = navController.previousBackStackEntry?.savedStateHandle
+            val nombreProducto = prevHandle?.get<String>("edit_nombreProducto")?.also { prevHandle.remove<String>("edit_nombreProducto") } ?: ""
+            val urlImagen = prevHandle?.get<String>("edit_urlImagen")?.also { prevHandle.remove<String>("edit_urlImagen") }
+            val descripcion = prevHandle?.get<String>("edit_descripcion")?.also { prevHandle.remove<String>("edit_descripcion") }
+            val existencia = prevHandle?.get<Int>("edit_existencia")?.also { prevHandle.remove<Int>("edit_existencia") } ?: 0
+            val precio = prevHandle?.get<Double>("edit_precio")?.also { prevHandle.remove<Double>("edit_precio") } ?: 0.0
+            val rowVersion = prevHandle?.get<String>("edit_rowVersion")?.also { prevHandle.remove<String>("edit_rowVersion") } ?: ""
+            ProductoActualizarScreen(
+                params = ProductoActualizarParams(
+                    id = id,
+                    strNombreProducto = nombreProducto,
+                    strURLImagen = urlImagen,
+                    strDescripcion = descripcion,
+                    intNumeroExistencia = existencia,
+                    decPrecio = precio,
+                    rowVersion = rowVersion
+                ),
+                onNavigateBack = { navController.popBackStack() },
+                onProductoActualizado = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadProductos", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                    navController.popBackStack()
+                },
+                onError = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(
+            route = Routes.PRODUCTO_ELIMINAR,
+            arguments = listOf(
+                navArgument("id") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            val prevHandle = navController.previousBackStackEntry?.savedStateHandle
+            val nombreProducto = prevHandle?.get<String>("delete_nombreProducto")?.also { prevHandle.remove<String>("delete_nombreProducto") } ?: ""
+            val urlImagen = prevHandle?.get<String>("delete_urlImagen")?.also { prevHandle.remove<String>("delete_urlImagen") }
+            val descripcion = prevHandle?.get<String>("delete_descripcion")?.also { prevHandle.remove<String>("delete_descripcion") }
+            val existencia = prevHandle?.get<Int>("delete_existencia")?.also { prevHandle.remove<Int>("delete_existencia") } ?: 0
+            val precio = prevHandle?.get<Double>("delete_precio")?.also { prevHandle.remove<Double>("delete_precio") } ?: 0.0
+            val rowVersion = prevHandle?.get<String>("delete_rowVersion")?.also { prevHandle.remove<String>("delete_rowVersion") } ?: ""
+            ProductoEliminarScreen(
+                params = ProductoEliminarParams(
+                    id = id,
+                    strNombreProducto = nombreProducto,
+                    strURLImagen = urlImagen,
+                    strDescripcion = descripcion,
+                    intNumeroExistencia = existencia,
+                    decPrecio = precio,
+                    rowVersion = rowVersion
+                ),
+                onNavigateBack = { navController.popBackStack() },
+                onProductoEliminado = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("reloadProductos", true)
                     navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
                     navController.popBackStack()
                 },

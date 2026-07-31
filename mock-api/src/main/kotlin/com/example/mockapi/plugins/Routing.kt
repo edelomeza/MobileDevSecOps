@@ -1,6 +1,7 @@
 package com.example.mockapi.plugins
 
 import com.example.mockapi.data.EmpleadoDatabase
+import com.example.mockapi.data.ProductoDatabase
 import com.example.mockapi.data.TipoEmpleadoDatabase
 import com.example.mockapi.data.UsuarioDatabase
 import com.example.mockapi.model.*
@@ -22,7 +23,8 @@ data class ErrorResponse(val message: String)
 fun Application.configureRouting(
     usuarioDatabase: UsuarioDatabase,
     empleadoDatabase: EmpleadoDatabase,
-    tipoEmpleadoDatabase: TipoEmpleadoDatabase
+    tipoEmpleadoDatabase: TipoEmpleadoDatabase,
+    productoDatabase: ProductoDatabase
 ) {
     install(CORS) {
         anyHost()
@@ -237,6 +239,78 @@ fun Application.configureRouting(
                 call.respond(LogoutResponse(message = "Empleado eliminado correctamente"))
             } else {
                 call.respond(HttpStatusCode.NotFound, ErrorResponse("Empleado no encontrado"))
+            }
+        }
+
+        get("/api/v1/Producto") {
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 8
+            val totalCount = productoDatabase.count()
+            val totalPages = (totalCount + pageSize - 1) / pageSize
+            val items = productoDatabase.list(page, pageSize)
+
+            call.respond(
+                ProductoListResponse(
+                    items = items.map { it.toDto() },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
+        get("/api/v1/Producto/buscar") {
+            val texto = call.request.queryParameters["texto"] ?: ""
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 8
+            val totalCount = productoDatabase.countSearch(texto)
+            val totalPages = if (totalCount == 0) 1 else (totalCount + pageSize - 1) / pageSize
+            val items = productoDatabase.buscar(texto, page, pageSize)
+
+            call.respond(
+                ProductoListResponse(
+                    items = items.map { it.toDto() },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
+        post("/api/v1/Producto") {
+            val request = call.receive<ProductCreateRequest>()
+            val producto = productoDatabase.create(
+                request.strNombreProducto,
+                request.strURLImagen,
+                request.strDescripcion,
+                request.intNumeroExistencia,
+                request.decPrecio
+            )
+            call.respond(status = HttpStatusCode.Created, message = producto.toDto())
+        }
+
+        put("/api/v1/Producto/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull()
+                ?: return@put call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
+            val request = call.receive<ProductUpdateRequest>()
+            val updated = productoDatabase.update(id, request)
+            if (updated != null) {
+                call.respond(updated.toDto())
+            } else {
+                call.respond(HttpStatusCode.NotFound, ErrorResponse("Producto no encontrado"))
+            }
+        }
+
+        delete("/api/v1/Producto/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull()
+                ?: return@delete call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
+            val request = call.receive<ProductDeleteRequest>()
+            if (productoDatabase.delete(id, request.rowVersion)) {
+                call.respond(LogoutResponse(message = "Producto eliminado correctamente"))
+            } else {
+                call.respond(HttpStatusCode.NotFound, ErrorResponse("Producto no encontrado"))
             }
         }
     }
