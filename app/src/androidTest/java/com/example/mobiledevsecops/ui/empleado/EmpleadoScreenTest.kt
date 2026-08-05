@@ -1,6 +1,7 @@
 package com.example.mobiledevsecops.ui.empleado
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.example.mobiledevsecops.shared.fake.FakeEmpleadoRepository
@@ -53,6 +54,10 @@ class EmpleadoScreenTest {
             )
         }
 
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule.onAllNodes(hasText("Página 1 de 2"), useUnmergedTree = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
         composeTestRule.onNodeWithText("Página 1 de 2").assertIsDisplayed()
         composeTestRule.onNodeWithText("Siguiente").assertIsDisplayed()
         composeTestRule.onNodeWithText("Anterior").assertIsDisplayed()

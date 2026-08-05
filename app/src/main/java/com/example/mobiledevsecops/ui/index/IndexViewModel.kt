@@ -23,6 +23,7 @@ sealed class IndexEvent {
     data object NavigateToEmpleado : IndexEvent()
     data object NavigateToCliente : IndexEvent()
     data object NavigateToProducto : IndexEvent()
+    data object NavigateToVenta : IndexEvent()
 }
 
 class IndexViewModel(
@@ -71,6 +72,13 @@ class IndexViewModel(
         if (BuildConfig.DEBUG) Logger.d("Navegando a Producto sin verificar token local")
         viewModelScope.launch {
             _events.emit(IndexEvent.NavigateToProducto)
+        }
+    }
+
+    fun onNavigateToVenta() {
+        if (BuildConfig.DEBUG) Logger.d("Navegando a Venta sin verificar token local")
+        viewModelScope.launch {
+            _events.emit(IndexEvent.NavigateToVenta)
         }
     }
 }

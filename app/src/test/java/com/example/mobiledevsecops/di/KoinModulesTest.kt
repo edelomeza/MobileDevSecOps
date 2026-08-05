@@ -4,8 +4,10 @@ import android.content.Context
 import com.example.mobiledevsecops.data.local.TokenManager
 import com.example.mobiledevsecops.data.remote.AuthApi
 import com.example.mobiledevsecops.data.remote.UsuarioApi
+import com.example.mobiledevsecops.data.remote.VentaApi
 import com.example.mobiledevsecops.domain.repository.AuthRepository
 import com.example.mobiledevsecops.domain.repository.UsuarioRepository
+import com.example.mobiledevsecops.domain.repository.VentaRepository
 import com.example.mobiledevsecops.domain.usecase.ActualizarUsuarioUseCase
 import com.example.mobiledevsecops.domain.usecase.CrearUsuarioUseCase
 import com.example.mobiledevsecops.domain.usecase.EliminarUsuarioUseCase
@@ -16,6 +18,9 @@ import com.example.mobiledevsecops.ui.index.IndexViewModel
 import com.example.mobiledevsecops.ui.login.LoginViewModel
 import com.example.mobiledevsecops.ui.usuario.UsuarioViewModel
 import com.example.mobiledevsecops.ui.usuariocrear.UsuarioCrearViewModel
+import com.example.mobiledevsecops.ui.venta.VentaViewModel
+import com.example.mobiledevsecops.ui.ventacrear.VentaCrearViewModel
+import com.example.mobiledevsecops.ui.ventadetalle.VentaDetalleViewModel
 import io.ktor.client.HttpClient
 import io.mockk.every
 import io.mockk.mockk
@@ -58,6 +63,7 @@ class KoinModulesTest : KoinTest {
 
         assertNotNull(get<AuthRepository>())
         assertNotNull(get<UsuarioRepository>())
+        assertNotNull(get<VentaRepository>())
         assertNotNull(get<LoginUseCase>())
         assertNotNull(get<LogoutUseCase>())
         assertNotNull(get<CrearUsuarioUseCase>())
@@ -65,6 +71,7 @@ class KoinModulesTest : KoinTest {
         assertNotNull(get<EliminarUsuarioUseCase>())
         assertNotNull(get<AuthApi>())
         assertNotNull(get<UsuarioApi>())
+        assertNotNull(get<VentaApi>())
         assertNotNull(get<TokenManager>())
         assertNotNull(get<HttpClient>())
 
@@ -87,6 +94,9 @@ class KoinModulesTest : KoinTest {
         assertNotNull(get<IndexViewModel>())
         assertNotNull(get<UsuarioViewModel>())
         assertNotNull(get<UsuarioCrearViewModel>())
+        assertNotNull(get<VentaViewModel>())
+        assertNotNull(get<VentaCrearViewModel>())
+        assertNotNull(get<VentaDetalleViewModel>())
 
         stopKoin()
     }

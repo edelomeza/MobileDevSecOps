@@ -29,6 +29,9 @@ import com.example.mobiledevsecops.ui.usuario.UsuarioScreen
 import com.example.mobiledevsecops.ui.usuarioactualizar.UsuarioActualizarScreen
 import com.example.mobiledevsecops.ui.usuariocrear.UsuarioCrearScreen
 import com.example.mobiledevsecops.ui.usuarioeliminar.UsuarioEliminarScreen
+import com.example.mobiledevsecops.ui.venta.VentaScreen
+import com.example.mobiledevsecops.ui.ventacrear.VentaCrearScreen
+import com.example.mobiledevsecops.ui.ventadetalle.VentaDetalleScreen
 
 object Routes {
     const val LOGIN = "login"
@@ -49,6 +52,9 @@ object Routes {
     const val PRODUCTO_CREAR = "producto/crear"
     const val PRODUCTO_ACTUALIZAR = "producto/actualizar/{id}"
     const val PRODUCTO_ELIMINAR = "producto/eliminar/{id}"
+    const val VENTA = "venta/{page}"
+    const val VENTA_CREAR = "venta/crear"
+    const val VENTA_DETALLE = "venta/detalle/{ventaId}/{strClaveVenta}/{dteFechaHoraCompra}/{strNombreCliente}/{strEstado}/{idCliCliente}/{idSegUsuario}/{idVenCatEstado}/{rowVersion}"
 
     fun navToUsuario(page: Int = 1) = "usuario/$page"
     fun navToActualizar(id: Int) = "usuario/actualizar/$id"
@@ -59,6 +65,23 @@ object Routes {
     fun navToCliente(page: Int = 1) = "cliente/$page"
     fun navToActualizarCliente(id: Int) = "cliente/actualizar/$id"
     fun navToEliminarCliente(id: Int) = "cliente/eliminar/$id"
+    fun navToVenta(page: Int = 1) = "venta/$page"
+    fun navToVentaDetalle(
+        ventaId: Int,
+        strClaveVenta: String,
+        dteFechaHoraCompra: String,
+        strNombreCliente: String,
+        strEstado: String,
+        idCliCliente: Int,
+        idSegUsuario: Int,
+        idVenCatEstado: Int,
+        rowVersion: String
+    ) = "venta/detalle/$ventaId/${java.net.URLEncoder.encode(strClaveVenta, "UTF-8")}" +
+        "/${java.net.URLEncoder.encode(dteFechaHoraCompra, "UTF-8")}" +
+        "/${java.net.URLEncoder.encode(strNombreCliente, "UTF-8")}" +
+        "/${java.net.URLEncoder.encode(strEstado, "UTF-8")}" +
+        "/$idCliCliente/$idSegUsuario/$idVenCatEstado" +
+        "/${java.net.URLEncoder.encode(rowVersion, "UTF-8")}"
 }
 
 object ProductoRoutes {
@@ -81,6 +104,9 @@ fun AppNavGraph(navController: NavHostController) {
         clienteCrudGraph(navController)
         productoListaGraph(navController)
         productoCrudGraph(navController)
+        ventaListaGraph(navController)
+        ventaCrudGraph(navController)
+        ventaDetalleGraph(navController)
     }
 }
 
@@ -115,6 +141,9 @@ private fun NavGraphBuilder.indexGraph(navController: NavHostController) {
             },
             onNavigateToProducto = {
                 navController.navigate(ProductoRoutes.navToProducto())
+            },
+            onNavigateToVenta = {
+                navController.navigate(Routes.navToVenta())
             }
         )
     }
@@ -670,6 +699,112 @@ private fun NavGraphBuilder.productoCrudGraph(navController: NavHostController) 
                     popUpTo(0) { inclusive = true }
                 }
             }
+        )
+    }
+}
+
+private fun NavGraphBuilder.ventaListaGraph(navController: NavHostController) {
+    composable(
+        route = Routes.VENTA,
+        arguments = listOf(navArgument("page") { type = NavType.IntType })
+    ) { backStackEntry ->
+        val reloadSignal = backStackEntry.savedStateHandle.get<Boolean>("reloadVentas") ?: false
+        if (reloadSignal) {
+            backStackEntry.savedStateHandle["reloadVentas"] = false
+        }
+
+        val operationResult = backStackEntry.savedStateHandle.get<String>("operationResult") ?: ""
+        if (operationResult.isNotEmpty()) {
+            backStackEntry.savedStateHandle["operationResult"] = ""
+        }
+
+        VentaScreen(
+            reloadSignal = reloadSignal,
+            operationResult = operationResult,
+            onNavigateBack = { navController.popBackStack() },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            },
+            onNavigateToCreate = {
+                navController.navigate(Routes.VENTA_CREAR)
+            },
+            onNavigateToDetalle = { ventaId, strClaveVenta, dteFechaHoraCompra, strNombreCliente, strEstado, idCliCliente, idSegUsuario, idVenCatEstado, rowVersion ->
+                navController.navigate(
+                    Routes.navToVentaDetalle(
+                        ventaId, strClaveVenta, dteFechaHoraCompra, strNombreCliente,
+                        strEstado, idCliCliente, idSegUsuario, idVenCatEstado, rowVersion
+                    )
+                )
+            }
+        )
+    }
+}
+
+private fun NavGraphBuilder.ventaCrudGraph(navController: NavHostController) {
+    composable(Routes.VENTA_CREAR) {
+        VentaCrearScreen(
+            onNavigateBack = { navController.popBackStack() },
+            onVentaCreada = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("reloadVentas", true)
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "success")
+                navController.popBackStack()
+            },
+            onError = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("operationResult", "error")
+                navController.popBackStack()
+            },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        )
+    }
+}
+
+private fun NavGraphBuilder.ventaDetalleGraph(navController: NavHostController) {
+    composable(
+        route = Routes.VENTA_DETALLE,
+        arguments = listOf(
+            navArgument("ventaId") { type = NavType.IntType },
+            navArgument("strClaveVenta") { type = NavType.StringType },
+            navArgument("dteFechaHoraCompra") { type = NavType.StringType },
+            navArgument("strNombreCliente") { type = NavType.StringType },
+            navArgument("strEstado") { type = NavType.StringType },
+            navArgument("idCliCliente") { type = NavType.IntType },
+            navArgument("idSegUsuario") { type = NavType.IntType },
+            navArgument("idVenCatEstado") { type = NavType.IntType },
+            navArgument("rowVersion") { type = NavType.StringType }
+        )
+    ) { backStackEntry ->
+        VentaDetalleScreen(
+            onNavigateBack = { navController.popBackStack() },
+            onSessionExpired = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            },
+            ventaId = backStackEntry.arguments?.getInt("ventaId") ?: 0,
+            strClaveVenta = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("strClaveVenta") ?: "", "UTF-8"
+            ),
+            dteFechaHoraCompra = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("dteFechaHoraCompra") ?: "", "UTF-8"
+            ),
+            strNombreCliente = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("strNombreCliente") ?: "", "UTF-8"
+            ),
+            strEstado = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("strEstado") ?: "", "UTF-8"
+            ),
+            idCliCliente = backStackEntry.arguments?.getInt("idCliCliente") ?: 0,
+            idSegUsuario = backStackEntry.arguments?.getInt("idSegUsuario") ?: 0,
+            idVenCatEstado = backStackEntry.arguments?.getInt("idVenCatEstado") ?: 0,
+            rowVersion = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("rowVersion") ?: "", "UTF-8"
+            )
         )
     }
 }
