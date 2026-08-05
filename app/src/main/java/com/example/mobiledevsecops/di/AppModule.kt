@@ -6,27 +6,36 @@ import com.example.mobiledevsecops.data.remote.ClienteApi
 import com.example.mobiledevsecops.data.remote.EmpleadoApi
 import com.example.mobiledevsecops.data.remote.ProductoApi
 import com.example.mobiledevsecops.data.remote.UsuarioApi
+import com.example.mobiledevsecops.data.remote.VentaApi
 import com.example.mobiledevsecops.data.repository.AuthRepositoryImpl
 import com.example.mobiledevsecops.data.repository.ClienteRepositoryImpl
 import com.example.mobiledevsecops.data.repository.EmpleadoRepositoryImpl
 import com.example.mobiledevsecops.data.repository.ProductoRepositoryImpl
 import com.example.mobiledevsecops.data.repository.UsuarioRepositoryImpl
+import com.example.mobiledevsecops.data.repository.VentaRepositoryImpl
 import com.example.mobiledevsecops.domain.repository.AuthRepository
 import com.example.mobiledevsecops.domain.repository.ClienteRepository
 import com.example.mobiledevsecops.domain.repository.EmpleadoRepository
 import com.example.mobiledevsecops.domain.repository.ProductoRepository
 import com.example.mobiledevsecops.domain.repository.UsuarioRepository
+import com.example.mobiledevsecops.domain.repository.VentaRepository
 import com.example.mobiledevsecops.domain.usecase.ActualizarClienteUseCase
 import com.example.mobiledevsecops.domain.usecase.ActualizarEmpleadoUseCase
 import com.example.mobiledevsecops.domain.usecase.ActualizarProductoUseCase
 import com.example.mobiledevsecops.domain.usecase.ActualizarUsuarioUseCase
 import com.example.mobiledevsecops.domain.usecase.BuscarClientesUseCase
+import com.example.mobiledevsecops.domain.usecase.BuscarProductosAutocompleteUseCase
 import com.example.mobiledevsecops.domain.usecase.BuscarProductosUseCase
 import com.example.mobiledevsecops.domain.usecase.BuscarUsuariosUseCase
+import com.example.mobiledevsecops.domain.usecase.BuscarVentasUseCase
 import com.example.mobiledevsecops.domain.usecase.CrearClienteUseCase
 import com.example.mobiledevsecops.domain.usecase.CrearEmpleadoUseCase
 import com.example.mobiledevsecops.domain.usecase.CrearProductoUseCase
 import com.example.mobiledevsecops.domain.usecase.CrearUsuarioUseCase
+import com.example.mobiledevsecops.domain.usecase.CrearVentaDetalleUseCase
+import com.example.mobiledevsecops.domain.usecase.CrearVentaUseCase
+import com.example.mobiledevsecops.domain.usecase.ActualizarEstadoVentaUseCase
+import com.example.mobiledevsecops.domain.usecase.EliminarVentaDetalleUseCase
 import com.example.mobiledevsecops.domain.usecase.EliminarClienteUseCase
 import com.example.mobiledevsecops.domain.usecase.EliminarEmpleadoUseCase
 import com.example.mobiledevsecops.domain.usecase.EliminarProductoUseCase
@@ -57,6 +66,11 @@ import com.example.mobiledevsecops.ui.usuario.UsuarioViewModel
 import com.example.mobiledevsecops.ui.usuarioactualizar.UsuarioActualizarViewModel
 import com.example.mobiledevsecops.ui.usuariocrear.UsuarioCrearViewModel
 import com.example.mobiledevsecops.ui.usuarioeliminar.UsuarioEliminarViewModel
+import com.example.mobiledevsecops.domain.usecase.ObtenerEstadosVentaUseCase
+import com.example.mobiledevsecops.domain.usecase.ObtenerDetallesVentaUseCase
+import com.example.mobiledevsecops.ui.venta.VentaViewModel
+import com.example.mobiledevsecops.ui.ventacrear.VentaCrearViewModel
+import com.example.mobiledevsecops.ui.ventadetalle.VentaDetalleViewModel
 import io.ktor.client.HttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -128,4 +142,18 @@ val appModule = module {
     viewModel { params ->
         ProductoEliminarViewModel(get(), params[0] as ProductoEliminarParams)
     }
+
+    single<VentaRepository> { VentaRepositoryImpl(get()) }
+    factory { VentaApi(get()) }
+    factory { BuscarVentasUseCase(get()) }
+    factory { CrearVentaUseCase(get()) }
+    factory { ActualizarEstadoVentaUseCase(get()) }
+    factory { CrearVentaDetalleUseCase(get()) }
+    factory { BuscarProductosAutocompleteUseCase(get()) }
+    factory { ObtenerEstadosVentaUseCase(get()) }
+    factory { ObtenerDetallesVentaUseCase(get()) }
+    factory { EliminarVentaDetalleUseCase(get()) }
+    viewModel { VentaViewModel(get(), get()) }
+    viewModel { VentaCrearViewModel(get(), get(), get()) }
+    viewModel { VentaDetalleViewModel(get(), get(), get(), get(), get(), get()) }
 }

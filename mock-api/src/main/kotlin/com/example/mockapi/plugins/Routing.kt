@@ -1,11 +1,14 @@
 package com.example.mockapi.plugins
 
+import com.example.mockapi.data.ClienteDatabase
 import com.example.mockapi.data.EmpleadoDatabase
+import com.example.mockapi.data.EstadoVentaCatalog
 import com.example.mockapi.data.ProductoDatabase
 import com.example.mockapi.data.ProductoDeleteResult
 import com.example.mockapi.data.ProductoUpdateResult
 import com.example.mockapi.data.TipoEmpleadoDatabase
 import com.example.mockapi.data.UsuarioDatabase
+import com.example.mockapi.data.VentaDatabase
 import com.example.mockapi.model.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -26,7 +29,9 @@ fun Application.configureRouting(
     usuarioDatabase: UsuarioDatabase,
     empleadoDatabase: EmpleadoDatabase,
     tipoEmpleadoDatabase: TipoEmpleadoDatabase,
-    productoDatabase: ProductoDatabase
+    productoDatabase: ProductoDatabase,
+    clienteDatabase: ClienteDatabase,
+    ventaDatabase: VentaDatabase
 ) {
     install(CORS) {
         anyHost()
@@ -326,6 +331,208 @@ fun Application.configureRouting(
                     HttpStatusCode.NotFound,
                     ErrorResponse("Producto no encontrado")
                 )
+            }
+        }
+
+        get("/api/v1/Cliente") {
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 8
+            val totalCount = clienteDatabase.count()
+            val totalPages = (totalCount + pageSize - 1) / pageSize
+            val items = clienteDatabase.list(page, pageSize)
+
+            call.respond(
+                ClienteListResponse(
+                    items = items.map { it.toDto() },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
+        get("/api/v1/Cliente/buscar") {
+            val texto = call.request.queryParameters["texto"] ?: ""
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 8
+            val totalCount = clienteDatabase.countSearch(texto)
+            val totalPages = (totalCount + pageSize - 1) / pageSize
+            val items = clienteDatabase.buscar(texto, page, pageSize)
+
+            call.respond(
+                ClienteListResponse(
+                    items = items.map { it.toDto() },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
+        get("/api/v1/Cliente/autocomplete") {
+            val texto = call.request.queryParameters["texto"] ?: ""
+            val maxResultados = call.request.queryParameters["maxResultados"]?.toIntOrNull() ?: 10
+            val items = clienteDatabase.autocomplete(texto, maxResultados)
+
+            call.respond(
+                ClienteListResponse(
+                    items = items.map { it.toDto() },
+                    totalCount = items.size,
+                    pageNumber = 1,
+                    pageSize = items.size,
+                    totalPages = 1
+                )
+            )
+        }
+
+        get("/api/v1/EstadoVenta") {
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 50
+            val estados = EstadoVentaCatalog.estados
+            val totalCount = estados.size
+            val totalPages = (totalCount + pageSize - 1) / pageSize
+            val items = estados.drop((page - 1) * pageSize).take(pageSize)
+
+            call.respond(
+                VenCatEstadoListResponse(
+                    items = items.map {
+                        VenCatEstadoDto(id = it.id, strValor = it.strValor, strDescripcion = it.strDescripcion)
+                    },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
+        get("/api/v1/Venta") {
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 8
+            val totalCount = ventaDatabase.count()
+            val totalPages = (totalCount + pageSize - 1) / pageSize
+            val items = ventaDatabase.list(page, pageSize)
+
+            call.respond(
+                VentaListResponse(
+                    items = items.map { ventaDatabase.toDto(it) },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
+        get("/api/v1/Venta/buscar") {
+            val strClaveVenta = call.request.queryParameters["strClaveVenta"]
+            val strNombreCliente = call.request.queryParameters["strNombreCliente"]
+            val dteFechaInicio = call.request.queryParameters["dteFechaInicio"]
+            val dteFechaFin = call.request.queryParameters["dteFechaFin"]
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 8
+            val totalCount = ventaDatabase.countSearch(
+                strClaveVenta, strNombreCliente, dteFechaInicio, dteFechaFin
+            )
+            val totalPages = if (totalCount == 0) 1 else (totalCount + pageSize - 1) / pageSize
+            val items = ventaDatabase.buscar(
+                strClaveVenta, strNombreCliente, dteFechaInicio, dteFechaFin, page, pageSize
+            )
+
+            call.respond(
+                VentaListResponse(
+                    items = items.map { ventaDatabase.toDto(it) },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
+        post("/api/v1/Venta") {
+            val request = call.receive<VentaCreateRequest>()
+            val venta = ventaDatabase.create(
+                request.idCliCliente,
+                request.idSegUsuario,
+                request.dteFechaHoraCompra,
+                request.strClaveVenta
+            )
+            call.respond(status = HttpStatusCode.Created, message = ventaDatabase.toDto(venta))
+        }
+
+        put("/api/v1/Venta/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull()
+                ?: return@put call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
+            val request = call.receive<VentaUpdateRequest>()
+            val success = ventaDatabase.updateEstado(id, request.idVenCatEstado, request.rowVersion)
+            if (success) {
+                call.respond(HttpStatusCode.NoContent)
+            } else {
+                call.respond(HttpStatusCode.NotFound, ErrorResponse("Venta no encontrada"))
+            }
+        }
+
+        get("/api/v1/VentaDetalle") {
+            val idVenVenta = call.request.queryParameters["idVenVenta"]?.toIntOrNull()
+            val page = call.request.queryParameters["PageNumber"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["PageSize"]?.toIntOrNull() ?: 1000
+
+            val allDetalles = if (idVenVenta != null) {
+                ventaDatabase.listDetallesByVentaId(idVenVenta)
+            } else {
+                emptyList()
+            }
+            val totalCount = allDetalles.size
+            val totalPages = if (totalCount == 0) 0 else (totalCount + pageSize - 1) / pageSize
+            val from = (page - 1) * pageSize
+            val items = allDetalles.drop(from).take(pageSize)
+
+            call.respond(
+                VentaDetalleListResponse(
+                    items = items.map { ventaDatabase.toDetalleDto(it) },
+                    totalCount = totalCount,
+                    pageNumber = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                )
+            )
+        }
+
+        post("/api/v1/VentaDetalle") {
+            val request = call.receive<VentaDetalleCreateRequest>()
+            val detalle = ventaDatabase.createDetalle(
+                request.idVenVenta,
+                request.idProProducto,
+                request.intPiezaVenta
+            )
+            if (detalle != null) {
+                call.respond(status = HttpStatusCode.Created, message = ventaDatabase.toDetalleDto(detalle))
+            } else {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    ErrorResponse("La venta o producto especificado no existe")
+                )
+            }
+        }
+
+        get("/api/v1/VentaDetalle/autocomplete") {
+            val texto = call.request.queryParameters["texto"] ?: ""
+            val maxResultados = call.request.queryParameters["maxResultados"]?.toIntOrNull() ?: 10
+            val items = ventaDatabase.autocompleteProductos(texto, maxResultados)
+            call.respond(items)
+        }
+
+        delete("/api/v1/VentaDetalle/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull()
+                ?: return@delete call.respond(HttpStatusCode.BadRequest, ErrorResponse("ID invalido"))
+            val success = ventaDatabase.deleteDetalle(id)
+            if (success) {
+                call.respond(LogoutResponse(message = "Detalle eliminado correctamente"))
+            } else {
+                call.respond(HttpStatusCode.NotFound, ErrorResponse("Detalle no encontrado"))
             }
         }
     }

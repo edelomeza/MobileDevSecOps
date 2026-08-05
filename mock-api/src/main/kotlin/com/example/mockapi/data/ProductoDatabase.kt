@@ -64,6 +64,8 @@ class ProductoDatabase {
 
     fun count(): Int = productos.size
 
+    fun listAll(): List<Producto> = productos.toList()
+
     fun list(page: Int, pageSize: Int): List<Producto> {
         val from = (page - 1) * pageSize
         return productos.drop(from).take(pageSize)
